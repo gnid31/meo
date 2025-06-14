@@ -1,3 +1,2 @@
-https://github.com/gnid31/meo/blob/main/3.jpg
-https://github.com/gnid31/meo/blob/main/2.jpg
-https://github.com/gnid31/meo/blob/main/204619015_546370133400348_1917872798926927653_n.jpg
+https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/160496121_474558013914894_7719350978609155828_n.jpg
+https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/2.jpg
