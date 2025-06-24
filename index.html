@@ -760,9 +760,13 @@
           }, 500); // Độ trễ 500ms để màn hình pháo hoa hiển thị
 
           setTimeout(() => {
-            body.style.backgroundImage = `url(${BACKGROUND_IMAGE_URL})`;
             startSnowfall();
           }, 1000); // Độ trễ thêm 1s cho background và snowfall để không chồng chéo
+
+          // Bắt đầu thay đổi ảnh nền khi màn hình pháo hoa kết thúc hoặc bị thoát
+          if (backgroundChangeInterval) {
+            clearInterval(backgroundChangeInterval); // Clear any existing interval
+          }
         } else {
           attemptsLeft--;
           answerInput.disabled = true;
