@@ -326,6 +326,26 @@
       #success-exit-hint {
         font-size: 1.5em; /* Giảm cỡ chữ trên màn hình nhỏ */
       }
+
+      /* New styles for question-box responsiveness */
+      #question-box {
+        padding: 20px; /* Adjusted padding for smaller screens */
+      }
+
+      #question-box div strong { /* Targeting the question text */
+        font-size: 1.1em; /* Adjust font size */
+      }
+
+      #secret-answer {
+        width: 90%; /* Make input wider */
+        padding: 8px; /* Reduce padding for input */
+        font-size: 0.9em; /* Adjust font size for input */
+      }
+
+      #submit-answer {
+        padding: 10px 20px; /* Adjust button padding */
+        font-size: 0.9em; /* Adjust button font size */
+      }
     }
 
     @keyframes shake {
@@ -1024,6 +1044,35 @@
         }
 
         const audio = document.getElementById('myAudio');
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      }
+    });
+
+    // New event listener for mobile tap/click to exit screensavers
+    document.addEventListener('click', function handleTapExitScreensaver() {
+      const screensaver = document.getElementById("screensaver");
+      const successScreensaver = document.getElementById('success-screensaver');
+      const audio = document.getElementById('myAudio');
+
+      if (screensaver && screensaver.style.display === "block") {
+        screensaver.style.display = "none";
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = null;
+        }
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      } else if (successScreensaver && successScreensaver.style.display === 'block') {
+        successScreensaver.style.display = 'none';
+        if (fireworkInterval) {
+          clearInterval(fireworkInterval);
+          fireworkInterval = null;
+        }
         if (audio) {
           audio.pause();
           audio.currentTime = 0;
