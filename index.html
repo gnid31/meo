@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hihi concho Hằng</title>
+  <title>by gnid31</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #FFC0CB;
-      background-size: cover;
+      background-size: contain;
       background-position: center;
       background-repeat: no-repeat;
       color: #333;
@@ -18,7 +18,7 @@
       align-items: flex-start;
       min-height: 100vh;
       margin: 0;
-      padding: 40px 20px;
+      padding: 20px 20px;
       box-sizing: border-box;
       overflow: hidden;
       transition: background-image 1s ease-in-out;
@@ -26,7 +26,7 @@
 
     .container {
       background-color: rgba(255, 255, 255, 0.7);
-      padding: 30px 40px;
+      padding: 20px 30px;
       border-radius: 12px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
       text-align: center;
@@ -38,6 +38,7 @@
 
     h1 {
       color: #FF69B4;
+      margin-top: 0;
       margin-bottom: 25px;
       font-size: 2.5em;
       font-weight: bold;
@@ -208,8 +209,10 @@
 
     #song-buttons {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
+      justify-content: center;
+      gap: 5px;
     }
 
     #song-buttons button {
@@ -217,12 +220,12 @@
       color: white;
       border: none;
       border-radius: 8px;
-      padding: 10px 20px;
-      margin: 5px;
+      padding: 5px 8px;
+      margin: 0;
       font-size: 1em;
       cursor: pointer;
       transition: transform 0.2s ease;
-      width: 120px;
+      width: auto;
     }
 
     #song-buttons button:hover {
@@ -546,16 +549,16 @@
   </div>
 
   <div class="container">
-    <h1>Meo meo đi này!</h1>
+    <h1>Mèo méo meo mèo me0o0o0!</h1>
     <div id="song-selector">
       <p>🎵 Âm nhạc là music</p>
       <div id="song-buttons">
-        <button onclick="playSong(0)">Bài 8</button>
-        <button onclick="playSong(1)">Bài 20</button>
-        <button onclick="playSong(2)">Bài 7</button>
-        <button onclick="playSong(3)">Bài 0</button>
-        <button onclick="playSong(4)">Bài 13</button>
-        <button onclick="playSong(5)">Bài 6</button>
+        <button onclick="playSong(0)">meo 8</button>
+        <button onclick="playSong(1)">meo 20</button>
+        <button onclick="playSong(2)">meo 7</button>
+        <button onclick="playSong(3)">meo 0</button>
+        <button onclick="playSong(4)">meo 13</button>
+        <button onclick="playSong(5)">meo 6</button>
       </div>
     </div>
 
@@ -761,7 +764,7 @@
               });
             }
             startSnowfall(); // Đã bỏ comment để kích hoạt tuyết rơi
-          }, 1000); // Độ trễ 1s để tuyết rơi bắt đầu sau khi pháo hoa/nhạc đã được xử lý một chút
+          }, 200); // Độ trễ 1s để tuyết rơi bắt đầu sau khi pháo hoa/nhạc đã được xử lý một chút
 
           // THÊM ĐOẠN MÃ NÀY: Đặt cờ cho phép thoát màn hình thành công sau một khoảng trễ riêng biệt
           setTimeout(() => {
