@@ -546,9 +546,9 @@
   </div>
 
   <div class="container">
-    <h1>gửi tặng concho Hằng ạ!</h1>
+    <h1>Meo meo đi này!</h1>
     <div id="song-selector">
-      <p>🎵 Meo meo đi này</p>
+      <p>🎵 Âm nhạc là music</p>
       <div id="song-buttons">
         <button onclick="playSong(0)">Bài 8</button>
         <button onclick="playSong(1)">Bài 20</button>
@@ -579,10 +579,15 @@
 
   <script>
 
-    const BACKGROUND_IMAGE_URL = "C:/Users/ADMIN/Desktop/meomeo/wallpaper/e82e59a091fccfe88d581ef7dc56f070.jpg";
+    // const BACKGROUND_IMAGE_URL = "C:/Users/ADMIN/Desktop/meomeo/wallpaper/e82e59a091fccfe88d581ef7dc56f070.jpg";
+    let wallpaperImageUrls = []; // New global array for wallpaper image URLs
+    let currentBackgroundIndex = 0;
+    let backgroundChangeInterval = null; // Biến để lưu trữ interval thay đổi ảnh nền
     let attemptsLeft = 4;
     let fireworkInterval = null;
     let animationInterval = null; // Cần là global để showScreensaver có thể clear nó
+    let allowExitSuccessScreen = false; // Khai báo biến cờ mới
+    let activeFireworkElements = []; // Global array to store active firework elements and their positions
 
     // Khai báo các biến DOM element ở phạm vi toàn cục
     let screensaver;
@@ -603,6 +608,52 @@
     let fireworksMusic; // Declare new variable for fireworks music
 
     const baseGifDuration = 1580; // Thời gian cơ bản cho GIF (miligiây)
+
+    // Helper to check for overlap between two rectangles
+    function checkOverlap(rect1, rect2) {
+        return rect1.x < rect2.x + rect2.width &&
+               rect1.x + rect1.width > rect2.x &&
+               rect1.y < rect2.y + rect2.height &&
+               rect1.y + rect1.height > rect2.y;
+    }
+
+    // Function to find a non-overlapping position
+    function findNonOverlappingPosition(gifWidth, gifHeight, maxAttempts = 50) {
+        let newX, newY;
+        let newRect;
+        let foundPosition = false;
+
+        for (let i = 0; i < maxAttempts; i++) {
+            newX = Math.random() * (window.innerWidth - gifWidth);
+            newY = Math.random() * (window.innerHeight - gifHeight);
+            newRect = { x: newX, y: newY, width: gifWidth, height: gifHeight };
+
+            let overlaps = false;
+            for (const activeFirework of activeFireworkElements) {
+                if (activeFirework.gifElement.isConnected && checkOverlap(newRect, activeFirework.rect)) { // check if element is still in DOM
+                    overlaps = true;
+                    break;
+                }
+            }
+
+            if (!overlaps) {
+                foundPosition = true;
+                break;
+            }
+        }
+
+        if (foundPosition) {
+            return { x: newX, y: newY };
+        } else {
+            // If a non-overlapping position cannot be found after maxAttempts,
+            // just return a random position and accept potential overlap.
+            console.warn('Could not find a non-overlapping position for firework after multiple attempts. Placing randomly.');
+            return {
+                x: Math.random() * (window.innerWidth - gifWidth),
+                y: Math.random() * (window.innerHeight - gifHeight)
+            };
+        }
+    }
 
     function createSnowflake() {
       if (document.querySelectorAll('.snowflake').length > 100) return;
@@ -685,17 +736,33 @@
 
           // Show success screensaver
           successScreensaver.style.display = 'block';
-          startFireworksEffect(); // Start the fireworks effect
-          if (fireworksMusic) { // Play fireworks music
-            fireworksMusic.play().catch(console.error);
-          }
+          allowExitSuccessScreen = false; // Vô hiệu hóa thoát ngay lập tức
+
+          // Kích hoạt pháo hoa và nhạc sau một khoảng thời gian ngắn
+          setTimeout(() => {
+            startFireworksEffect(); // Bắt đầu hiệu ứng GIF
+            if (fireworksMusic) { // Phát nhạc pháo hoa
+              console.log('Attempting to load and play fireworks music...');
+              fireworksMusic.load(); // Tải âm thanh
+              fireworksMusic.play().then(() => {
+                console.log('Fireworks music started playing successfully.');
+              }).catch(error => {
+                if (error.name === 'NotAllowedError') {
+                  console.error('Autoplay prevented for fireworks music. User interaction needed.');
+                } else if (error.name === 'AbortError') {
+                  console.warn('Fireworks music play aborted. This often happens if play() is called, and then pause() or another play() is called rapidly afterwards.');
+                } else {
+                  console.error('Error playing fireworks music:', error);
+                }
+              });
+            }
+            allowExitSuccessScreen = true; // Cho phép thoát sau khi nhạc đã được cố gắng phát
+          }, 500); // Độ trễ 500ms để màn hình pháo hoa hiển thị
 
           setTimeout(() => {
             body.style.backgroundImage = `url(${BACKGROUND_IMAGE_URL})`;
             startSnowfall();
-          }, 500);
-          audio.muted = false;
-          audio.play().catch(console.error); // Play main audio
+          }, 1000); // Độ trễ thêm 1s cho background và snowfall để không chồng chéo
         } else {
           attemptsLeft--;
           answerInput.disabled = true;
@@ -755,7 +822,7 @@
         // Thêm sự kiện 'input' để kiểm tra ô nhập liệu và kích hoạt/vô hiệu hóa nút
         answerInput.addEventListener('input', () => {
           if (answerInput.value.trim() === '') {
-            submitBtn.disabled = false; // Changed from true to false
+            submitBtn.disabled = true; // Đảm bảo nút bị vô hiệu hóa khi input rỗng
           } else {
             submitBtn.disabled = false;
           }
@@ -773,7 +840,8 @@
 
 
         window.addEventListener('keydown', (e) => {
-          if (e.key === 'F5') {
+          // Chỉ xử lý F5 để reset khi màn hình bị khóa đang hiển thị
+          if (e.key === 'F5' && lockedScreen.style.display === 'flex') {
             e.preventDefault(); // Ngăn trang reload
 
             attemptsLeft = 4;
@@ -798,9 +866,11 @@
                 fireworksMusic.pause();
                 fireworksMusic.currentTime = 0;
               }
+              allowExitSuccessScreen = false; // Đặt lại cờ
+              activeFireworkElements = []; // Clear all active fireworks
             }
 
-          } else if (successScreensaver && successScreensaver.style.display === 'block') { // Thêm điều kiện thoát màn hình thành công
+          } else if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) { // Thêm điều kiện cờ
             // Khi người dùng nhấn phím bất kỳ để thoát màn hình thành công
             successScreensaver.style.display = 'none';
             if (fireworkInterval) {
@@ -871,8 +941,12 @@
         clearInterval(fireworkInterval); // Clear any existing interval
       }
 
-      // Không gọi clearFireworks() ở đây nữa để các GIF cũ có thể hoàn thành animation
-      // clearFireworks();
+      // No clearing interval here as per user's last request (keep spawning)
+
+      // Clear existing interval if any to avoid duplicates
+      if (fireworkInterval) {
+          clearInterval(fireworkInterval);
+      }
 
       fireworkInterval = setInterval(() => {
         const gif = document.createElement('img');
@@ -880,36 +954,44 @@
         const randomIndex = Math.floor(Math.random() * bouncingImages.length);
         gif.src = bouncingImages[randomIndex].src;
 
-        // Append it first so its dimensions can be calculated once loaded
+        // Estimated dimensions for initial placement.
+        // CSS defines width: 150px, height: auto. We'll use 150x150 as a reasonable estimate.
+        const estimatedGifWidth = 150;
+        const estimatedGifHeight = 150;
+
+        // Find a non-overlapping position
+        const position = findNonOverlappingPosition(estimatedGifWidth, estimatedGifHeight);
+
+        gif.style.left = `${position.x}px`;
+        gif.style.top = `${position.y}px`;
+
         successScreensaver.appendChild(gif);
 
-        // Function to set position after image loads
-        const setGifPosition = () => {
-          const actualGifWidth = gif.offsetWidth;
-          const actualGifHeight = gif.offsetHeight;
+        // Add to active list
+        const fireworkEntry = {
+            gifElement: gif,
+            rect: { x: position.x, y: position.y, width: estimatedGifWidth, height: estimatedGifHeight }
+        };
+        activeFireworkElements.push(fireworkEntry);
 
-          // Ensure the GIF is fully visible by subtracting its dimensions from the window dimensions
-          const x = Math.random() * (window.innerWidth - actualGifWidth);
-          const y = Math.random() * (window.innerHeight - actualGifHeight);
-
-          gif.style.left = `${x}px`;
-          gif.style.top = `${y}px`;
+        // Update exact dimensions once loaded
+        gif.onload = () => {
+            fireworkEntry.rect.width = gif.offsetWidth;
+            fireworkEntry.rect.height = gif.offsetHeight;
         };
 
-        gif.onload = setGifPosition; // Set position when image loads
-
-        // If the image is already cached (loaded), call setGifPosition immediately
-        if (gif.complete) {
-          setGifPosition();
-        }
-
-        // Remove gif after its animation duration
+        // Remove gif and its position entry after its animation duration
         const animationDurationMs = 6 * 1000; // Match CSS animation duration (6s)
         setTimeout(() => {
-          gif.remove();
+            gif.remove();
+            // Remove from activeFireworkElements array
+            const index = activeFireworkElements.indexOf(fireworkEntry);
+            if (index > -1) {
+                activeFireworkElements.splice(index, 1);
+            }
         }, animationDurationMs);
 
-      }, 600); // Create GIF every 600ms for a lively effect
+      }, 600); // Create GIF every 600ms
     }
 
     // New function to clear all fireworks GIFs (vẫn giữ để dùng khi cần reset hoàn toàn)
@@ -925,12 +1007,15 @@
     // Gọi hàm loadImages khi trang được tải
     document.addEventListener('DOMContentLoaded', async () => {
       console.log('DOM đã được tải, bắt đầu tải ảnh...');
-      await loadImages();
+      await loadImages(); // For fireworks
+      await loadWallpaperImages(); // Load wallpaper images
       console.log('Hoàn thành tải ảnh');
       // Ban đầu vô hiệu hóa nút submit nếu input rỗng
       if (answerInput.value.trim() === '') {
         submitBtn.disabled = true;
       }
+      // Khởi động thay đổi ảnh nền ngay khi DOM tải xong
+      startBackgroundChange();
     });
 
     let currentImgIndex = 0;
@@ -1053,7 +1138,7 @@
           audio.pause();
           audio.currentTime = 0;
         }
-      } else if (successScreensaver && successScreensaver.style.display === 'block') { // Thêm điều kiện thoát màn hình thành công
+      } else if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) { // Thêm điều kiện cờ
             successScreensaver.style.display = 'none';
             if (fireworkInterval) {
               clearInterval(fireworkInterval);
@@ -1066,61 +1151,61 @@
           }
     });
 
-    // New event listener for mobile tap/click to exit screensavers
-    document.addEventListener('click', function handleTapExitScreensaver() {
-      const screensaver = document.getElementById("screensaver");
-      const successScreensaver = document.getElementById('success-screensaver');
-      const audio = document.getElementById('myAudio');
-      const fireworksMusic = document.getElementById('fireworks-music'); // Get fireworks music
-
-      if (screensaver && screensaver.style.display === "block") {
-        screensaver.style.display = "none";
-        if (animationInterval) {
-          clearInterval(animationInterval);
-          animationInterval = null;
-        }
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-      } else if (successScreensaver && successScreensaver.style.display === 'block') {
-        successScreensaver.style.display = 'none';
-        if (fireworkInterval) {
-          clearInterval(fireworkInterval);
-          fireworkInterval = null;
-        }
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-        if (fireworksMusic) { // Stop fireworks music
-          fireworksMusic.pause();
-          fireworksMusic.currentTime = 0;
-        }
-      }
-    });
-
     // Xử lý khi tab ẩn/hiện để dừng/khởi động lại việc tạo GIF pháo hoa
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         // Tab bị ẩn, dừng việc tạo GIF pháo hoa mới
-        if (fireworkInterval) {
-          clearInterval(fireworkInterval);
-          fireworkInterval = null;
-        }
-        if (fireworksMusic) { // Stop fireworks music when tab is hidden
-          fireworksMusic.pause();
-        }
+        // Loại bỏ dòng này để pháo hoa tiếp tục sinh ra khi tab bị ẩn
+        // if (fireworkInterval) {
+        //   clearInterval(fireworkInterval);
+        //   fireworkInterval = null;
+        // }
       } else {
         // Tab hiển thị trở lại, tiếp tục tạo GIF mới nếu màn hình thành công đang hiển thị
-        if (successScreensaver && successScreensaver.style.display === 'block') {
-          startFireworksEffect(); // Sẽ tiếp tục tạo GIF mới, các GIF cũ sẽ tự biến mất theo setTimeout
-          if (fireworksMusic) { // Resume fireworks music when tab is visible
-            fireworksMusic.play().catch(console.error);
-          }
+        if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) { // Thêm điều kiện cờ
+          startFireworksEffect();
         }
       }
     });
+
+    // Function to change background image
+    function changeBackgroundImage() {
+        if (wallpaperImageUrls.length === 0) {
+            console.warn('No wallpaper images loaded.');
+            return;
+        }
+        currentBackgroundIndex = (currentBackgroundIndex + 1) % wallpaperImageUrls.length;
+        body.style.backgroundImage = `url(${wallpaperImageUrls[currentBackgroundIndex]})`;
+    }
+
+    // Function to start automatic background change
+    function startBackgroundChange() {
+        if (backgroundChangeInterval) {
+            clearInterval(backgroundChangeInterval);
+        }
+        // Thay đổi ảnh nền ngay lập tức lần đầu
+        changeBackgroundImage();
+        // Sau đó thay đổi ảnh nền mỗi 5 giây (hoặc thời gian bạn muốn)
+        backgroundChangeInterval = setInterval(changeBackgroundImage, 5000); // Change every 5 seconds
+    }
+
+    // New function to load wallpaper images from example.txt
+    async function loadWallpaperImages() {
+        try {
+            console.log('Attempting to load wallpaper image URLs from example.txt...');
+            const response = await fetch('wallpaper.txt');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const text = await response.text();
+            wallpaperImageUrls = text.split('\n').filter(url => url.trim() !== '');
+            console.log('Loaded wallpaper images:', wallpaperImageUrls);
+        } catch (error) {
+            console.error('Error loading wallpaper images from example.txt:', error);
+            // Fallback to a default image or show an error
+            body.style.backgroundImage = `url("C:/Users/ADMIN/Desktop/meomeo/wallpaper/e82e59a091fccfe88d581ef7dc56f070.jpg")`; // Fallback to a default if loading fails
+        }
+    }
 
   </script>
   <div id="screensaver">
