@@ -575,6 +575,9 @@
   <!-- New audio for fireworks background music -->
   <audio id="fireworks-music" src="https://github.com/gnid31/meo/raw/main/music/happy_birthday.mp3" loop></audio>
 
+  <!-- New audio for main background music -->
+  <audio id="main-background-music" src="https://github.com/gnid31/meo/raw/main/music/background_music.mp3" loop></audio>
+
   <!-- New success screensaver HTML -->
   <div id="success-screensaver">
     <div id="success-exit-hint">Press any key to exit</div>
@@ -610,6 +613,7 @@
     let errorGifOverlay;
     let successScreensaver;
     let fireworksMusic; // Declare new variable for fireworks music
+    let mainBackgroundMusic; // Declare new variable for main background music
 
     const baseGifDuration = 1580; // Thời gian cơ bản cho GIF (miligiây)
 
@@ -730,6 +734,7 @@
       errorGifOverlay = document.getElementById('error-gif-overlay');
       successScreensaver = document.getElementById('success-screensaver'); // Get the new success screensaver
       fireworksMusic = document.getElementById('fireworks-music'); // Get the new fireworks music element
+      mainBackgroundMusic = document.getElementById('main-background-music'); // Get the new main background music element
 
       function handleAnswerSubmission() {
         const correctAnswer = '107';
@@ -880,20 +885,28 @@
             }
 
           } else if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) { // Thêm điều kiện cờ
-            // Khi người dùng nhấn phím bất kỳ để thoát màn hình thành công
             successScreensaver.style.display = 'none';
             if (fireworkInterval) {
               clearInterval(fireworkInterval);
               fireworkInterval = null;
             }
-            // Tùy chọn: Dừng nhạc hoặc reset screensaver chính ở đây nếu cần
-            if (audio) {
-              audio.pause();
-              audio.currentTime = 0;
-            }
             if (fireworksMusic) { // Stop fireworks music
               fireworksMusic.pause();
               fireworksMusic.currentTime = 0;
+            }
+            if (mainBackgroundMusic) { // Stop main background music
+              mainBackgroundMusic.pause();
+              mainBackgroundMusic.currentTime = 0;
+            }
+            // NEW: Play main background music when success screensaver is exited
+            if (mainBackgroundMusic) {
+                console.log('Attempting to load and play main background music upon success screen exit...');
+                mainBackgroundMusic.load();
+                mainBackgroundMusic.play().then(() => {
+                    console.log('Main background music started playing successfully after success screen exit.');
+                }).catch(error => {
+                    console.error('Error playing main background music on success screen exit:', error);
+                });
             }
           }
         });
@@ -1156,6 +1169,20 @@
             if (fireworksMusic) { // Stop fireworks music
               fireworksMusic.pause();
               fireworksMusic.currentTime = 0;
+            }
+            if (mainBackgroundMusic) { // Stop main background music
+              mainBackgroundMusic.pause();
+              mainBackgroundMusic.currentTime = 0;
+            }
+            // NEW: Play main background music when success screensaver is exited
+            if (mainBackgroundMusic) {
+                console.log('Attempting to load and play main background music upon success screen exit...');
+                mainBackgroundMusic.load();
+                mainBackgroundMusic.play().then(() => {
+                    console.log('Main background music started playing successfully after success screen exit.');
+                }).catch(error => {
+                    console.error('Error playing main background music on success screen exit:', error);
+                });
             }
           }
     });
