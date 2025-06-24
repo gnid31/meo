@@ -1193,7 +1193,7 @@
     async function loadWallpaperImages() {
         try {
             console.log('Attempting to load wallpaper image URLs from example.txt...');
-            const response = await fetch('wallpaper.txt');
+            const response = await fetch('https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/wallpaper.txt');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
