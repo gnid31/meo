@@ -320,32 +320,6 @@
         font-size: 1.5em;
         padding: 12px 30px;
       }
-
-      /* Điều chỉnh cỡ chữ cho màn hình khóa và màn hình thành công trên mobile */
-      #locked-screen .highlight-text,
-      #success-exit-hint {
-        font-size: 1.5em; /* Giảm cỡ chữ trên màn hình nhỏ */
-      }
-
-      /* New styles for question-box responsiveness */
-      #question-box {
-        padding: 20px; /* Adjusted padding for smaller screens */
-      }
-
-      #question-box div strong { /* Targeting the question text */
-        font-size: 1.1em; /* Adjust font size */
-      }
-
-      #secret-answer {
-        width: 90%; /* Make input wider */
-        padding: 8px; /* Reduce padding for input */
-        font-size: 0.9em; /* Adjust font size for input */
-      }
-
-      #submit-answer {
-        padding: 10px 20px; /* Adjust button padding */
-        font-size: 0.9em; /* Adjust button font size */
-      }
     }
 
     @keyframes shake {
@@ -505,7 +479,7 @@
       width: 150px; /* Kích thước cơ bản của GIF pháo hoa */
       height: auto;
       opacity: 0;
-      animation: fadeAndMove 4s ease-out forwards; /* Hoạt ảnh fade out và di chuyển */
+      animation: fadeAndMove 6s ease-out forwards; /* Hoạt ảnh fade out và di chuyển */
       pointer-events: none;
     }
 
@@ -567,7 +541,7 @@
       <div>đáng đánh!!!</div>
     </div>
     <!-- New GIF for locked screen -->
-    <img id="fight-gif" src="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/fight3.gif" alt="Fight GIF">
+    <img id="fight-gif" src="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/fight3.gif" alt="Fight GIF" style="width: 500px; height: auto; margin-top: 30px;">
     <div class="f5-hint">Press F5 to continue opening the Mystery Box</div>
   </div>
 
@@ -594,6 +568,9 @@
   </div>
 
   <audio id="error-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+
+  <!-- New audio for fireworks background music -->
+  <audio id="fireworks-music" src="https://github.com/gnid31/meo/raw/main/music/happy_birthday.mp3" loop></audio>
 
   <!-- New success screensaver HTML -->
   <div id="success-screensaver">
@@ -623,6 +600,7 @@
     let errorSound;
     let errorGifOverlay;
     let successScreensaver;
+    let fireworksMusic; // Declare new variable for fireworks music
 
     const baseGifDuration = 1580; // Thời gian cơ bản cho GIF (miligiây)
 
@@ -696,6 +674,7 @@
       errorSound = document.getElementById('error-sound');
       errorGifOverlay = document.getElementById('error-gif-overlay');
       successScreensaver = document.getElementById('success-screensaver'); // Get the new success screensaver
+      fireworksMusic = document.getElementById('fireworks-music'); // Get the new fireworks music element
 
       function handleAnswerSubmission() {
         const correctAnswer = '107';
@@ -707,6 +686,9 @@
           // Show success screensaver
           successScreensaver.style.display = 'block';
           startFireworksEffect(); // Start the fireworks effect
+          if (fireworksMusic) { // Play fireworks music
+            fireworksMusic.play().catch(console.error);
+          }
 
           setTimeout(() => {
             body.style.backgroundImage = `url(${BACKGROUND_IMAGE_URL})`;
@@ -773,7 +755,7 @@
         // Thêm sự kiện 'input' để kiểm tra ô nhập liệu và kích hoạt/vô hiệu hóa nút
         answerInput.addEventListener('input', () => {
           if (answerInput.value.trim() === '') {
-            submitBtn.disabled = true;
+            submitBtn.disabled = false; // Changed from true to false
           } else {
             submitBtn.disabled = false;
           }
@@ -812,6 +794,10 @@
             }
             if (successScreensaver) {
               successScreensaver.style.display = 'none';
+              if (fireworksMusic) { // Stop fireworks music
+                fireworksMusic.pause();
+                fireworksMusic.currentTime = 0;
+              }
             }
 
           } else if (successScreensaver && successScreensaver.style.display === 'block') { // Thêm điều kiện thoát màn hình thành công
@@ -825,6 +811,10 @@
             if (audio) {
               audio.pause();
               audio.currentTime = 0;
+            }
+            if (fireworksMusic) { // Stop fireworks music
+              fireworksMusic.pause();
+              fireworksMusic.currentTime = 0;
             }
           }
         });
@@ -890,21 +880,36 @@
         const randomIndex = Math.floor(Math.random() * bouncingImages.length);
         gif.src = bouncingImages[randomIndex].src;
 
-        // Random position
-        const x = Math.random() * (window.innerWidth - 100); // 100px is approx gif width
-        const y = Math.random() * (window.innerHeight - 100);
-        gif.style.left = `${x}px`;
-        gif.style.top = `${y}px`;
-
+        // Append it first so its dimensions can be calculated once loaded
         successScreensaver.appendChild(gif);
 
-        // Remove gif after its animation duration using setTimeout
-        const animationDurationMs = 4 * 1000; // 3 seconds from CSS @keyframes fadeAndMove
+        // Function to set position after image loads
+        const setGifPosition = () => {
+          const actualGifWidth = gif.offsetWidth;
+          const actualGifHeight = gif.offsetHeight;
+
+          // Ensure the GIF is fully visible by subtracting its dimensions from the window dimensions
+          const x = Math.random() * (window.innerWidth - actualGifWidth);
+          const y = Math.random() * (window.innerHeight - actualGifHeight);
+
+          gif.style.left = `${x}px`;
+          gif.style.top = `${y}px`;
+        };
+
+        gif.onload = setGifPosition; // Set position when image loads
+
+        // If the image is already cached (loaded), call setGifPosition immediately
+        if (gif.complete) {
+          setGifPosition();
+        }
+
+        // Remove gif after its animation duration
+        const animationDurationMs = 6 * 1000; // Match CSS animation duration (6s)
         setTimeout(() => {
           gif.remove();
         }, animationDurationMs);
 
-      }, 600); // Tạo GIF mỗi 300ms
+      }, 600); // Create GIF every 600ms for a lively effect
     }
 
     // New function to clear all fireworks GIFs (vẫn giữ để dùng khi cần reset hoàn toàn)
@@ -1048,7 +1053,17 @@
           audio.pause();
           audio.currentTime = 0;
         }
-      }
+      } else if (successScreensaver && successScreensaver.style.display === 'block') { // Thêm điều kiện thoát màn hình thành công
+            successScreensaver.style.display = 'none';
+            if (fireworkInterval) {
+              clearInterval(fireworkInterval);
+              fireworkInterval = null;
+            }
+            if (fireworksMusic) { // Stop fireworks music
+              fireworksMusic.pause();
+              fireworksMusic.currentTime = 0;
+            }
+          }
     });
 
     // New event listener for mobile tap/click to exit screensavers
@@ -1056,6 +1071,7 @@
       const screensaver = document.getElementById("screensaver");
       const successScreensaver = document.getElementById('success-screensaver');
       const audio = document.getElementById('myAudio');
+      const fireworksMusic = document.getElementById('fireworks-music'); // Get fireworks music
 
       if (screensaver && screensaver.style.display === "block") {
         screensaver.style.display = "none";
@@ -1077,6 +1093,10 @@
           audio.pause();
           audio.currentTime = 0;
         }
+        if (fireworksMusic) { // Stop fireworks music
+          fireworksMusic.pause();
+          fireworksMusic.currentTime = 0;
+        }
       }
     });
 
@@ -1088,10 +1108,16 @@
           clearInterval(fireworkInterval);
           fireworkInterval = null;
         }
+        if (fireworksMusic) { // Stop fireworks music when tab is hidden
+          fireworksMusic.pause();
+        }
       } else {
         // Tab hiển thị trở lại, tiếp tục tạo GIF mới nếu màn hình thành công đang hiển thị
         if (successScreensaver && successScreensaver.style.display === 'block') {
           startFireworksEffect(); // Sẽ tiếp tục tạo GIF mới, các GIF cũ sẽ tự biến mất theo setTimeout
+          if (fireworksMusic) { // Resume fireworks music when tab is visible
+            fireworksMusic.play().catch(console.error);
+          }
         }
       }
     });
