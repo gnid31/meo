@@ -1327,9 +1327,9 @@
         try {
             console.log('Attempting to load success screen assets from success_screen_assets.txt...');
             const timestamp = new Date().getTime(); // Cache busting
-            const response = await fetch(`https://raw.githubusercontent.com/gnid31/meo/main/success_screen_assets.txt?t=${timestamp}`);
+            const response = await fetch(`https://raw.githubusercontent.com/gnid31/meo/main/assets.txt?t=${timestamp}`);
             if (!response.ok) {
-                console.error(`Failed to fetch success_screen_assets.txt: HTTP error! status: ${response.status}`);
+                console.error(`Failed to fetch assets.txt: HTTP error! status: ${response.status}`);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const text = await response.text();
@@ -1337,7 +1337,7 @@
             console.log('Successfully loaded success screen assets. Count:', successScreenAssets.length);
             console.log('Loaded assets:', successScreenAssets);
         } catch (error) {
-            console.error('Error loading success screen assets from success_screen_assets.txt:', error);
+            console.error('Error loading success screen assets from assets.txt:', error);
             // Fallback to default assets if loading fails
             successScreenAssets = ["Chúc mừng!", "https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/box.gif"];
         }
