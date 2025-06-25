@@ -1026,7 +1026,7 @@
         let estimatedWidth, estimatedHeight;
 
         // NEW: Determine if the asset is an image or text
-        const isImage = /\.(gif|jpe?g|png)$/i.test(randomAsset);
+        const isImage = /\.(gif|jpe?g|png|webp)$/i.test(randomAsset);
 
         if (isImage) {
             newElement = document.createElement('img');
