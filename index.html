@@ -1130,6 +1130,13 @@
 
       // Xử lý audio an toàn hơn
       try {
+
+        if (mainBackgroundMusic) {
+            mainBackgroundMusic.pause();
+            mainBackgroundMusic.currentTime = 0;
+            console.log('Main background music stopped due to song selection.');
+        }
+        
         audio.pause();
         audio.currentTime = 0;
 
