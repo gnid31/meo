@@ -1,10 +1,15 @@
-<!DOCTYPE html>
 <html lang="vi">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>by gnid31</title>
+  <link rel="preload" as="image" href="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/box.gif">
+  <link rel="preload" as="image" href="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/bite.gif">
+  <link rel="preload" as="image" href="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/fight3.gif">
+  <link rel="preload" as="audio" href="https://github.com/gnid31/meo/raw/main/music/happy_birthday.mp3">
+  <link rel="preload" as="audio" href="https://github.com/gnid31/meo/raw/main/music/background_music.mp3">
+  <link rel="preload" as="fetch" type="text/plain" href="https://raw.githubusercontent.com/gnid31/meo/main/phrases.txt">
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -594,7 +599,8 @@
     let fireworkInterval = null;
     let animationInterval = null; // Cần là global để showScreensaver có thể clear nó
     let allowExitSuccessScreen = false; // Khai báo biến cờ mới
-    let activeFireworkElements = []; // Global array to store active firework elements and their positions
+    let activeFireworkElements = []; // Global array to store active elements and their positions
+    let textPhrases = []; // NEW: Global array to store text phrases from file
 
     // Khai báo các biến DOM element ở phạm vi toàn cục
     let screensaver;
@@ -745,36 +751,41 @@
 
           // Show success screensaver
           successScreensaver.style.display = 'block';
-          allowExitSuccessScreen = false; // Vô hiệu hóa thoát ngay lập tức
+          // NEW: Allow exit immediately when success screen is shown
+          allowExitSuccessScreen = true;
+          console.log('allowExitSuccessScreen set to true immediately upon showing success screen.');
+
+          // NEW: Stop main background music when success screen is active
+          if (mainBackgroundMusic) {
+              mainBackgroundMusic.pause();
+              mainBackgroundMusic.currentTime = 0;
+              console.log('Main background music stopped.');
+          }
 
           // Kích hoạt pháo hoa và nhạc sau một khoảng thời gian ngắn
           setTimeout(() => {
             startFireworksEffect(); // Bắt đầu hiệu ứng GIF
             if (fireworksMusic) { // Phát nhạc pháo hoa
               console.log('Attempting to load and play fireworks music...');
-              fireworksMusic.load(); // Tải âm thanh
+              fireworksMusic.currentTime = 0; // Ensure it starts from beginning
+              fireworksMusic.load(); // Explicitly trigger loading
+
               fireworksMusic.play().then(() => {
                 console.log('Fireworks music started playing successfully.');
-                // Đặt cờ cho phép thoát sau khi nhạc đã được cố gắng phát thành công
-                // Chúng ta sẽ đặt cờ này với một độ trễ riêng biệt để tránh xung đột
+                // allowExitSuccessScreen is already true, no need to set here again
               }).catch(error => {
                 if (error.name === 'NotAllowedError') {
                   console.error('Autoplay prevented for fireworks music. User interaction needed.');
+                  // allowExitSuccessScreen is already true, so no need for a specific fallback timeout here.
                 } else if (error.name === 'AbortError') {
                   console.warn('Fireworks music play aborted. This often happens if play() is called, and then pause() or another play() is called rapidly afterwards.');
                 } else {
                   console.error('Error playing fireworks music:', error);
                 }
-                // Nếu có lỗi, vẫn cho phép thoát sau một chút trễ để người dùng không bị kẹt
               });
             }
             startSnowfall(); // Đã bỏ comment để kích hoạt tuyết rơi
-          }, 200); // Độ trễ 1s để tuyết rơi bắt đầu sau khi pháo hoa/nhạc đã được xử lý một chút
-
-          // THÊM ĐOẠN MÃ NÀY: Đặt cờ cho phép thoát màn hình thành công sau một khoảng trễ riêng biệt
-          setTimeout(() => {
-            allowExitSuccessScreen = true;
-          }, 700); // 500ms ban đầu + 200ms để nhạc có thời gian khởi tạo
+          }, 200); // Initial delay before fireworks and music start
 
           // Bắt đầu thay đổi ảnh nền khi màn hình pháo hoa kết thúc hoặc bị thoát
         } else {
@@ -955,10 +966,6 @@
 
     // New function for fireworks effect
     function startFireworksEffect() {
-      if (bouncingImages.length === 0) {
-        console.error('No images loaded for fireworks effect.');
-        return;
-      }
       if (fireworkInterval) {
         clearInterval(fireworkInterval); // Clear any existing interval
       }
@@ -971,54 +978,67 @@
       }
 
       fireworkInterval = setInterval(() => {
-        const gif = document.createElement('img');
-        gif.classList.add('firework-gif');
-        const randomIndex = Math.floor(Math.random() * bouncingImages.length);
-        gif.src = bouncingImages[randomIndex].src;
+        // NEW: Get a random phrase from the loaded textPhrases array
+        if (textPhrases.length === 0) {
+            console.warn('No text phrases loaded for fireworks effect.');
+            return; // Exit if no phrases are available
+        }
+        const randomPhrase = textPhrases[Math.floor(Math.random() * textPhrases.length)];
+
+        const textElement = document.createElement('div'); // Create a div for text
+        textElement.classList.add('success-bouncing-text'); // Add the new class
+        textElement.textContent = randomPhrase; // Set the text content to a random phrase
 
         // Estimated dimensions for initial placement.
-        // CSS defines width: 150px, height: auto. We'll use 150x150 as a reasonable estimate.
-        const estimatedGifWidth = 150;
-        const estimatedGifHeight = 150;
+        // For text, we'll estimate a bit larger as it can vary.
+        const estimatedTextWidth = 300; // Estimate width
+        const estimatedTextHeight = 70;  // Estimate height
 
         // Find a non-overlapping position
-        const position = findNonOverlappingPosition(estimatedGifWidth, estimatedGifHeight);
+        const position = findNonOverlappingPosition(estimatedTextWidth, estimatedTextHeight);
 
-        gif.style.left = `${position.x}px`;
-        gif.style.top = `${position.y}px`;
+        textElement.style.left = `${position.x}px`;
+        textElement.style.top = `${position.y}px`;
 
-        successScreensaver.appendChild(gif);
+        successScreensaver.appendChild(textElement);
 
         // Add to active list
-        const fireworkEntry = {
-            gifElement: gif,
-            rect: { x: position.x, y: position.y, width: estimatedGifWidth, height: estimatedGifHeight }
+        const textEntry = {
+            domElement: textElement, // Changed from gifElement to domElement
+            rect: { x: position.x, y: position.y, width: estimatedTextWidth, height: estimatedTextHeight }
         };
-        activeFireworkElements.push(fireworkEntry);
+        activeFireworkElements.push(textEntry);
 
-        // Update exact dimensions once loaded
-        gif.onload = () => {
-            fireworkEntry.rect.width = gif.offsetWidth;
-            fireworkEntry.rect.height = gif.offsetHeight;
-        };
+        // Update exact dimensions once rendered
+        // Using setTimeout to ensure element is rendered and has actual offsetWidth/Height
+        setTimeout(() => {
+            textEntry.rect.width = textElement.offsetWidth;
+            textEntry.rect.height = textElement.offsetHeight;
+        }, 0);
 
-        // Remove gif and its position entry after its animation duration
+
+        // Remove element and its position entry after its animation duration
         const animationDurationMs = 6 * 1000; // Match CSS animation duration (6s)
         setTimeout(() => {
-            gif.remove();
+            textElement.remove();
             // Remove from activeFireworkElements array
-            const index = activeFireworkElements.indexOf(fireworkEntry);
+            const index = activeFireworkElements.indexOf(textEntry);
             if (index > -1) {
                 activeFireworkElements.splice(index, 1);
             }
         }, animationDurationMs);
 
-      }, 600); // Create GIF every 600ms
+      }, 600); // Create text every 600ms
     }
 
     // New function to clear all fireworks GIFs (vẫn giữ để dùng khi cần reset hoàn toàn)
     function clearFireworks() {
       if (successScreensaver) {
+        // NEW: Select and remove the new bouncing text elements
+        while (successScreensaver.querySelector('.success-bouncing-text')) {
+          successScreensaver.querySelector('.success-bouncing-text').remove();
+        }
+        // OLD: Remove firework-gif if any left (shouldn't be created anymore by startFireworksEffect, but good for cleanup)
         while (successScreensaver.querySelector('.firework-gif')) {
           successScreensaver.querySelector('.firework-gif').remove();
         }
@@ -1027,17 +1047,25 @@
 
 
     // Gọi hàm loadImages khi trang được tải
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('DOM đã được tải, bắt đầu tải ảnh...');
-      await loadImages(); // For fireworks
-      await loadWallpaperImages(); // Load wallpaper images
-      console.log('Hoàn thành tải ảnh');
+    document.addEventListener('DOMContentLoaded', () => { // Removed 'async' from here
+      console.log('DOM đã được tải, bắt đầu tải ảnh và văn bản...');
+      // NEW: Kick off text phrases loading in the background
+      loadPhrases().then(() => console.log('Text phrases finished loading in background.'));
+      // NEW: Kick off image loading in the background without blocking DOMContentLoaded
+      // These promises are not awaited here, but their results will populate the arrays.
+      loadImages().then(() => console.log('Bouncing images finished loading in background.'));
+      loadWallpaperImages().then(() => {
+        console.log('Wallpaper images finished loading in background.');
+        startBackgroundChange(); // Start background change only after wallpapers are loaded
+      });
+
+      console.log('Hoàn thành tải ảnh'); // This log will now appear much faster
       // Ban đầu vô hiệu hóa nút submit nếu input rỗng
       if (answerInput.value.trim() === '') {
         submitBtn.disabled = true;
       }
-      // Khởi động thay đổi ảnh nền ngay khi DOM tải xong
-      startBackgroundChange();
+      // REMOVED: No longer calling startBackgroundChange directly here as it's chained to loadWallpaperImages
+      // startBackgroundChange();
     });
 
     let currentImgIndex = 0;
@@ -1239,12 +1267,48 @@
             }
             const text = await response.text();
             wallpaperImageUrls = text.split('\n').filter(url => url.trim() !== '');
-            console.log('Successfully loaded wallpaper images. Count:', wallpaperImageUrls.length);
+
+            // NEW: Preload images by creating Image objects
+            const preloadPromises = wallpaperImageUrls.map(url => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = resolve;
+                    img.onerror = () => {
+                        console.warn(`Failed to preload wallpaper image: ${url}`);
+                        resolve(); // Resolve even on error to not block Promise.all
+                    };
+                });
+            });
+            await Promise.allSettled(preloadPromises); // Wait for all images to attempt to load
+
+            console.log('Successfully loaded and preloaded wallpaper images. Count:', wallpaperImageUrls.length);
             console.log('Wallpaper URLs:', wallpaperImageUrls);
         } catch (error) {
             console.error('Error loading wallpaper images from wallpaper.txt:', error);
             // Fallback to a default image or show an error
             body.style.backgroundImage = `url("C:/Users/ADMIN/Desktop/meomeo/wallpaper/e82e59a091fccfe88d581ef7dc56f070.jpg")`; // Fallback to a default if loading fails
+        }
+    }
+
+    // NEW: Function to load text phrases from a file
+    async function loadPhrases() {
+        try {
+            console.log('Attempting to load text phrases from phrases.txt...');
+            const timestamp = new Date().getTime(); // Cache busting
+            const response = await fetch(`https://raw.githubusercontent.com/gnid31/meo/main/phrases.txt?t=${timestamp}`);
+            if (!response.ok) {
+                console.error(`Failed to fetch phrases.txt: HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const text = await response.text();
+            textPhrases = text.split('\n').map(phrase => phrase.trim()).filter(phrase => phrase !== '');
+            console.log('Successfully loaded text phrases. Count:', textPhrases.length);
+            console.log('Loaded phrases:', textPhrases);
+        } catch (error) {
+            console.error('Error loading text phrases from phrases.txt:', error);
+            // Fallback to a default phrase if loading fails
+            textPhrases = ["Chúc mừng!"];
         }
     }
 
