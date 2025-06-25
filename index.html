@@ -1379,7 +1379,7 @@
     // NEW: Function to load all assets for the success screen from a single file
     async function loadSuccessScreenAssets() {
         try {
-            console.log('Attempting to load success screen assets from success_screen_assets.txt...');
+            console.log('Attempting to load success screen assets from assets.txt...');
             const timestamp = new Date().getTime(); // Cache busting
             const response = await fetch(`https://raw.githubusercontent.com/gnid31/meo/main/assets.txt?t=${timestamp}`);
             if (!response.ok) {
