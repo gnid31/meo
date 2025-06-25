@@ -844,19 +844,13 @@
               errorGifOverlay.classList.remove('visible'); // Ẩn GIF sau thời gian tính toán
               answerInput.disabled = false; // Kích hoạt lại ô nhập liệu
               answerInput.focus();          // Tập trung vào ô nhập liệu
+              questionBox.classList.remove('shake'); // Remove shake class here
             }, currentGifDuration);
           } else {
             // Nếu là lần cuối cùng (attemptsLeft = 0), không hiển thị GIF,
             // và các nút/ô nhập liệu sẽ không được kích hoạt lại vì hộp câu hỏi sẽ biến mất.
+            questionBox.classList.remove('shake'); // Remove shake class here
           }
-
-          errorSound.play()
-            .then(() => {
-              errorSound.onended = () => {
-                questionBox.classList.remove('shake');
-              };
-            })
-            .catch(console.error);
 
           if (attemptsLeft <= 0) {
             questionBox.style.display = 'none';
