@@ -688,6 +688,7 @@
     let successScreenAssets = []; // NEW: Global array to store all combined assets (text and image URLs)
     let shuffledSuccessScreenAssets = []; // NEW: Global array for shuffled assets
     let loadingScreen; // NEW: Declare loading screen variable
+    let bouncingImageAnimation = null; // NEW: Global variable for the bouncing image animation frame
 
     // Helper function to shuffle an array
     function shuffleArray(array) {
@@ -814,6 +815,182 @@
       "https://github.com/gnid31/meo/raw/main/music/gia_nhu_em_nhin_lai.mp3",
     ];
 
+    // NEW: Global variable for the screensaver's specific keydown listener
+    let screensaverKeyListener = null;
+
+    // NEW: Define the showScreensaver function
+    function showScreensaver(songUrl) {
+        screensaver.style.display = 'block'; // Make the screensaver visible
+        console.log('Song screensaver shown.');
+
+        // Clear any previous screensaver key listener to prevent multiple bindings
+        if (screensaverKeyListener) {
+            window.removeEventListener('keydown', screensaverKeyListener);
+            screensaverKeyListener = null;
+        }
+
+        // Stop main background music when the individual song screensaver is active
+        if (mainBackgroundMusic) {
+            mainBackgroundMusic.pause();
+            mainBackgroundMusic.currentTime = 0;
+            console.log('Main background music stopped for individual song screensaver.');
+        }
+
+        // Play the selected song
+        if (myAudio) {
+            myAudio.src = songUrl;
+            myAudio.load(); // Load the new audio source
+            myAudio.play().then(() => {
+                console.log('Individual song started playing successfully.');
+            }).catch(error => {
+                console.error('Error playing individual song:', error);
+            });
+
+            // NEW: Add an event listener for when the song ends
+            myAudio.onended = () => {
+                console.log('Individual song ended. Exiting screensaver...');
+                // Simulate key press exit logic
+                screensaver.style.display = 'none'; // Hide the screensaver
+
+                // Stop bouncing image animation and hide it
+                if (bouncingImageAnimation) {
+                    cancelAnimationFrame(bouncingImageAnimation);
+                    bouncingImageAnimation = null;
+                }
+                if (bouncingImg) {
+                    bouncingImg.style.display = 'none';
+                    bouncingImg.src = ''; // Clear image source
+                }
+
+                // Resume main background music
+                if (mainBackgroundMusic) {
+                    console.log('Attempting to play main background music after song ended.');
+                    mainBackgroundMusic.play().catch(error => {
+                        console.error('Error playing main background music after song ended:', error);
+                    });
+                }
+                // Remove the general keydown listener for the screensaver
+                if (screensaverKeyListener) {
+                    window.removeEventListener('keydown', screensaverKeyListener);
+                    screensaverKeyListener = null;
+                }
+                // Clear this onended handler itself to prevent multiple calls if showScreensaver is called again
+                myAudio.onended = null;
+            };
+        }
+
+        // Bouncing image logic
+        if (bouncingImg && bouncingImages.length > 0) {
+            const randomIndex = Math.floor(Math.random() * bouncingImages.length);
+            bouncingImg.src = bouncingImages[randomIndex].src; // Set the image source
+            bouncingImg.style.display = 'block'; // Ensure image is visible
+            bouncingImg.style.position = 'absolute'; // Ensure it's positioned absolutely for animation
+
+            // Clear any existing animation
+            if (bouncingImageAnimation) {
+                cancelAnimationFrame(bouncingImageAnimation); // Stop current animation
+            }
+
+            // NEW: Khởi tạo vị trí và tốc độ chỉ một lần ở đây
+            let currentX = Math.random() * (window.innerWidth - bouncingImg.offsetWidth);
+            let currentY = Math.random() * (window.innerHeight - bouncingImg.offsetHeight);
+            let dx = 1.5 //tốc độ cố định theo trục X xuống 1
+            let dy = 1// Giảm tốc độ cố định theo trục Y xuống 1
+
+            const animateBounce = () => {
+                const imgWidth = bouncingImg.offsetWidth;
+                const imgHeight = bouncingImg.offsetHeight;
+
+                currentX += dx;
+                currentY += dy;
+
+                let collided = false; // Cờ để kiểm tra xem có va chạm nào xảy ra không
+
+                // Phát hiện va chạm với các cạnh cửa sổ
+                if (currentX + imgWidth > window.innerWidth || currentX < 0) {
+                    dx *= -1; // Đảo ngược hướng ngang
+                    currentX = Math.max(0, Math.min(currentX, window.innerWidth - imgWidth)); // Đảm bảo nằm trong giới hạn
+                    collided = true; // Đặt cờ va chạm
+                }
+                if (currentY + imgHeight > window.innerHeight || currentY < 0) {
+                    dy *= -1; // Đảo ngược hướng dọc
+                    currentY = Math.max(0, Math.min(currentY, window.innerHeight - imgHeight)); // Đảm bảo nằm trong giới hạn
+                    collided = true; // Đặt cờ va chạm
+                }
+
+                // Thay đổi nguồn ảnh khi có va chạm
+                if (collided && bouncingImages.length > 1) { // Chỉ thay đổi nếu có nhiều hơn một ảnh
+                    let newImageSrc;
+                    let attempts = 0;
+                    do {
+                        const randomIndex = Math.floor(Math.random() * bouncingImages.length);
+                        newImageSrc = bouncingImages[randomIndex].src;
+                        attempts++;
+                        if (attempts > 100) { // Ngăn chặn vòng lặp vô hạn trong trường hợp đặc biệt
+                           console.warn('Không tìm thấy ảnh khác để thay đổi. Đang sử dụng lại ảnh cũ.');
+                           break;
+                        }
+                    } while (newImageSrc === bouncingImg.src); // Đảm bảo ảnh mới khác với ảnh hiện tại
+
+                    if (bouncingImg.src !== newImageSrc) { // Chỉ cập nhật nếu thực sự khác
+                        bouncingImg.src = newImageSrc;
+                        console.log('Ảnh nhảy đã đổi thành:', newImageSrc);
+                    }
+                }
+
+                bouncingImg.style.left = `${currentX}px`;
+                bouncingImg.style.top = `${currentY}px`;
+
+                bouncingImageAnimation = requestAnimationFrame(animateBounce); // Tiếp tục hoạt ảnh
+            };
+            bouncingImageAnimation = requestAnimationFrame(animateBounce); // Bắt đầu hoạt ảnh
+        } else {
+            console.warn('bouncingImg hoặc bouncingImages chưa sẵn sàng cho màn hình chờ bài hát. Bỏ qua hoạt ảnh nhảy.');
+            if (bouncingImg) bouncingImg.style.display = 'none'; // Đảm bảo ẩn nếu không có hoạt ảnh
+        }
+
+        // Define the listener function for exiting the screensaver
+        screensaverKeyListener = (e) => {
+            console.log('Key pressed on song screensaver:', e.key); // Debug log
+            // Only exit if it's not the Space key
+            if (e.key !== ' ') {
+                screensaver.style.display = 'none'; // Hide the screensaver
+                console.log('Song screensaver hidden.');
+
+                // Pause and reset the individual song
+                if (myAudio) {
+                    myAudio.pause();
+                    myAudio.currentTime = 0;
+                    console.log('Individual song paused and reset.');
+                }
+
+                // Stop bouncing image animation and hide it
+                if (bouncingImageAnimation) {
+                    cancelAnimationFrame(bouncingImageAnimation);
+                    bouncingImageAnimation = null;
+                }
+                if (bouncingImg) {
+                    bouncingImg.style.display = 'none';
+                    bouncingImg.src = ''; // Clear image source
+                }
+
+                // Resume main background music
+                if (mainBackgroundMusic) {
+                    console.log('Attempting to play main background music after exiting individual song screensaver.');
+                    mainBackgroundMusic.play().catch(error => {
+                        console.error('Error playing main background music after screensaver exit:', error);
+                    });
+                }
+                // Remove this specific listener once the screensaver is hidden
+                window.removeEventListener('keydown', screensaverKeyListener);
+                screensaverKeyListener = null; // Clear the reference
+            }
+        };
+
+        // Attach the listener to the window
+        window.addEventListener('keydown', screensaverKeyListener);
+    }
+
     function playSong(index) {
       const songUrl = songList[index];
       showScreensaver(songUrl);
@@ -840,6 +1017,11 @@
       mainBackgroundMusic = document.getElementById('main-background-music'); // Get the new main background music element
       loadingScreen = document.getElementById('loading-screen'); // NEW: Get the loading screen element
       slapsSound = document.getElementById('slaps-sound'); // NEW: Get the slaps sound element
+
+      // NEW: Ensure bouncing image is hidden initially
+      if (bouncingImg) {
+          bouncingImg.style.display = 'none';
+      }
 
       // NEW: Get loading screen elements
       let loadingCatGif = document.getElementById('loading-cat-gif');
@@ -883,9 +1065,7 @@
 
           // Show success screensaver
           successScreensaver.style.display = 'block';
-          // NEW: Allow exit immediately when success screen is shown
-          allowExitSuccessScreen = true;
-          console.log('allowExitSuccessScreen set to true immediately upon showing success screen.');
+          console.log('Success screen shown.');
 
           // NEW: Stop main background music when success screen is active
           if (mainBackgroundMusic) {
@@ -904,20 +1084,24 @@
 
               fireworksMusic.play().then(() => {
                 console.log('Fireworks music started playing successfully.');
-                // allowExitSuccessScreen is already true, no need to set here again
+                allowExitSuccessScreen = true; // MOVED: Allow exit only after fireworks music starts
+                console.log('allowExitSuccessScreen set to true.');
               }).catch(error => {
                 if (error.name === 'NotAllowedError') {
                   console.error('Autoplay prevented for fireworks music. User interaction needed.');
-                  // allowExitSuccessScreen is already true, so no need for a specific fallback timeout here.
+                  // If autoplay is prevented, still allow exit after a delay to ensure user can proceed
+                  setTimeout(() => { allowExitSuccessScreen = true; console.log('Autoplay error: allowExitSuccessScreen set to true after delay.'); }, 1000);
                 } else if (error.name === 'AbortError') {
                   console.warn('Fireworks music play aborted. This often happens if play() is called, and then pause() or another play() is called rapidly afterwards.');
+                  setTimeout(() => { allowExitSuccessScreen = true; console.log('Abort error: allowExitSuccessScreen set to true after delay.'); }, 1000); // Still allow exit
                 } else {
                   console.error('Error playing fireworks music:', error);
+                  setTimeout(() => { allowExitSuccessScreen = true; console.log('General error: allowExitSuccessScreen set to true after delay.'); }, 1000); // Still allow exit
                 }
               });
             }
             startSnowfall(); // Đã bỏ comment để kích hoạt tuyết rơi
-          }, 200); // Initial delay before fireworks and music start
+          }, 100); // Increased initial delay to 1.5 seconds
 
           // Bắt đầu thay đổi ảnh nền khi màn hình pháo hoa kết thúc hoặc bị thoát
         } else {
@@ -1058,15 +1242,10 @@
               fireworksMusic.pause();
               fireworksMusic.currentTime = 0;
             }
-            if (mainBackgroundMusic) { // Stop main background music
-              mainBackgroundMusic.pause();
-              mainBackgroundMusic.currentTime = 0;
-            }
             // NEW: Play main background music when success screensaver is exited
             if (mainBackgroundMusic) {
-                console.log('Attempting to load and play main background music upon success screen exit...');
-                mainBackgroundMusic.load();
-                mainBackgroundMusic.play().then(() => {
+                console.log('Attempting to play main background music upon success screen exit...');
+                mainBackgroundMusic.play().then(() => { // Removed load() as it should already be loaded
                     console.log('Main background music started playing successfully after success screen exit.');
                 }).catch(error => {
                     console.error('Error playing main background music on success screen exit:', error);
