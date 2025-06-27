@@ -615,6 +615,16 @@
     let allowExitSuccessScreen = false; // Khai báo biến cờ mới
     let activeFireworkElements = []; // Global array to store active elements and their positions
     let successScreenAssets = []; // NEW: Global array to store all combined assets (text and image URLs)
+    let shuffledSuccessScreenAssets = []; // NEW: Global array for shuffled assets
+
+    // Helper function to shuffle an array
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+      }
+      return array;
+    }
 
     // Khai báo các biến DOM element ở phạm vi toàn cục
     let screensaver;
@@ -1002,20 +1012,19 @@
         clearInterval(fireworkInterval); // Clear any existing interval
       }
 
-      // No clearing interval here as per user's last request (keep spawning)
-
-      // Clear existing interval if any to avoid duplicates
-      if (fireworkInterval) {
-          clearInterval(fireworkInterval);
-      }
-
       fireworkInterval = setInterval(() => {
-        // NEW: Get a random asset from the loaded successScreenAssets array
-        if (successScreenAssets.length === 0) {
-            console.warn('No success screen assets loaded.');
-            return; // Exit if no assets are available
+        // NEW: Check if shuffled array is empty, if so, reshuffle
+        if (shuffledSuccessScreenAssets.length === 0) {
+            shuffledSuccessScreenAssets = shuffleArray([...successScreenAssets]);
+            console.log('Shuffled success screen assets reloaded and reshuffled.');
         }
-        const randomAsset = successScreenAssets[Math.floor(Math.random() * successScreenAssets.length)];
+
+        // NEW: Get the next asset from the shuffled array
+        if (shuffledSuccessScreenAssets.length === 0) {
+            console.warn('No success screen assets available after reshuffling.');
+            return; // Exit if no assets are available even after reshuffling (should not happen if successScreenAssets is populated)
+        }
+        const randomAsset = shuffledSuccessScreenAssets.shift(); // Get and remove the first element
 
         let newElement;
         let estimatedWidth, estimatedHeight;
@@ -1383,12 +1392,15 @@
             }
             const text = await response.text();
             successScreenAssets = text.split('\n').map(asset => asset.trim()).filter(asset => asset !== '');
-            console.log('Successfully loaded success screen assets. Count:', successScreenAssets.length);
+            // Initialize and shuffle the shuffled array
+            shuffledSuccessScreenAssets = shuffleArray([...successScreenAssets]);
+            console.log('Successfully loaded and shuffled success screen assets. Count:', successScreenAssets.length);
             console.log('Loaded assets:', successScreenAssets);
         } catch (error) {
             console.error('Error loading success screen assets from assets.txt:', error);
             // Fallback to default assets if loading fails
             successScreenAssets = ["Chúc mừng!", "https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/box.gif"];
+            shuffledSuccessScreenAssets = shuffleArray([...successScreenAssets]);
         }
     }
 
