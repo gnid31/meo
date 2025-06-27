@@ -677,7 +677,7 @@
     let wallpaperImageUrls = []; // New global array for wallpaper image URLs
     let currentBackgroundIndex = 0;
     let backgroundChangeInterval = null; // Biến để lưu trữ interval thay đổi ảnh nền
-    let attemptsLeft = 4;
+    let attemptsLeft = 3;
     let fireworkInterval = null;
     let animationInterval = null; // Cần là global để showScreensaver có thể clear nó
     let allowExitSuccessScreen = false; // Khai báo biến cờ mới
@@ -929,7 +929,7 @@
 
             errorGifOverlay.classList.add('visible'); // Hiển thị GIF
 
-            const currentGifDuration = baseGifDuration * (4 - attemptsLeft); // Tính toán thời gian dựa trên số lần sai
+            const currentGifDuration = baseGifDuration * (3 - attemptsLeft); // Tính toán thời gian dựa trên số lần sai
             setTimeout(() => {
               errorGifOverlay.classList.remove('visible'); // Ẩn GIF sau thời gian tính toán
               answerInput.disabled = false; // Kích hoạt lại ô nhập liệu
@@ -990,7 +990,7 @@
           if (e.key === 'F5' && lockedScreen.style.display === 'flex') {
             e.preventDefault(); // Ngăn trang reload
 
-            attemptsLeft = 4;
+            attemptsLeft = 3;
             errorMessage.textContent = '';
             attemptsMessage.textContent = '';
             answerInput.value = ''; // Xóa giá trị
