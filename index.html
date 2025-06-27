@@ -557,10 +557,10 @@
     }
 
     #loading-cat-gif {
-      width: 50px; /* Kích thước của GIF mèo, bạn có thể điều chỉnh */
+      width: 80px; /* Kích thước của GIF mèo, bạn có thể điều chỉnh */
       height: auto;
       position: absolute; /* Để có thể di chuyển ngang thanh loading */
-      top: -50px; /* Đặt GIF ngay phía trên thanh loading (giả sử GIF cao 50px) */
+      top: -80px; /* Đặt GIF ngay phía trên thanh loading (giả sử GIF cao 50px) */
       left: 0; /* Bắt đầu từ bên trái của thanh loading */
       transform: translateX(-50%); /* Canh giữa GIF theo trục X */
       z-index: 100001; /* Đảm bảo GIF nằm trên thanh loading */
@@ -841,28 +841,33 @@
       let loadingBar = document.querySelector('.loading-bar');
       let loadingPercentageText = document.getElementById('loading-percentage');
 
-      // NEW: Attempt to play background music on first user interaction to satisfy autoplay policy
-      let hasInteracted = false;
-      const enableAutoplay = () => {
-        if (!hasInteracted && mainBackgroundMusic) {
-          mainBackgroundMusic.play().then(() => {
-            console.log('Main background music started playing due to user interaction.');
-            hasInteracted = true;
-            document.removeEventListener('click', enableAutoplay);
-            document.removeEventListener('keydown', enableAutoplay);
-          }).catch(error => {
-            if (error.name === 'NotAllowedError') {
-              console.warn('Autoplay prevented for main background music. User interaction needed again.');
-            } else if (error.name === 'AbortError') {
-              console.warn('Main background music play aborted.');
-            } else {
-              console.error('Error playing main background music:', error);
-            }
-          });
+      // Logic tải tài nguyên và cập nhật tiến độ
+      let totalAssetsToLoad = 0;
+      let loadedAssetsCount = 0;
+
+      const updateLoadingProgress = () => {
+        loadedAssetsCount++;
+        const progress = Math.min(100, Math.floor((loadedAssetsCount / totalAssetsToLoad) * 100)); // Đảm bảo không vượt quá 100%
+
+        if (loadingBar) {
+          loadingBar.style.width = `${progress}%`;
+        }
+        if (loadingPercentageText) {
+          loadingPercentageText.textContent = progress;
+        }
+
+        // Move GIF based on progress relative to its parent (.loading-bar-container)
+        if (loadingCatGif && loadingBar && loadingBar.parentElement) {
+          const barContainerWidth = loadingBar.parentElement.offsetWidth;
+          // Lấy chiều rộng thực tế của GIF sau khi nó được tải (hoặc dùng giá trị mặc định)
+          const gifWidth = loadingCatGif.offsetWidth || 50; 
+          
+          // Tính toán vị trí mới cho GIF
+          const newLeftPx = (progress / 100) * barContainerWidth; 
+          // Trừ đi một nửa chiều rộng GIF để nó căn giữa vào điểm tiến độ
+          loadingCatGif.style.left = `${newLeftPx - (gifWidth / 2)}px`; 
         }
       };
-      document.addEventListener('click', enableAutoplay);
-      document.addEventListener('keydown', enableAutoplay);
 
       function handleAnswerSubmission() {
         const correctAnswer = '107';
@@ -1043,34 +1048,6 @@
         console.error('Một hoặc nhiều phần tử không được tìm thấy trong DOM.');
       }
 
-      // Logic tải tài nguyên và cập nhật tiến độ
-      let totalAssetsToLoad = 0;
-      let loadedAssetsCount = 0;
-
-      const updateLoadingProgress = () => {
-        loadedAssetsCount++;
-        const progress = Math.min(100, Math.floor((loadedAssetsCount / totalAssetsToLoad) * 100)); // Đảm bảo không vượt quá 100%
-
-        if (loadingBar) {
-          loadingBar.style.width = `${progress}%`;
-        }
-        if (loadingPercentageText) {
-          loadingPercentageText.textContent = progress;
-        }
-
-        // Move GIF based on progress relative to its parent (.loading-bar-container)
-        if (loadingCatGif && loadingBar && loadingBar.parentElement) {
-          const barContainerWidth = loadingBar.parentElement.offsetWidth;
-          // Lấy chiều rộng thực tế của GIF sau khi nó được tải (hoặc dùng giá trị mặc định)
-          const gifWidth = loadingCatGif.offsetWidth || 50; 
-          
-          // Tính toán vị trí mới cho GIF
-          const newLeftPx = (progress / 100) * barContainerWidth; 
-          // Trừ đi một nửa chiều rộng GIF để nó căn giữa vào điểm tiến độ
-          loadingCatGif.style.left = `${newLeftPx - (gifWidth / 2)}px`; 
-        }
-      };
-
       // Show loading screen immediately
       if (loadingScreen) {
         loadingScreen.classList.remove('hidden');
@@ -1091,7 +1068,6 @@
       // Handle case where totalAssetsToLoad might be 0 (e.g., if files are empty or fail to load)
       if (totalAssetsToLoad === 0) {
           totalAssetsToLoad = 1; // Prevent division by zero, ensure 100% can be reached
-          updateLoadingProgress(); // Update once for 100%
       }
 
       // Collect all individual asset promises
@@ -1122,6 +1098,16 @@
       setTimeout(() => {
         if (loadingScreen) {
           loadingScreen.classList.add('hidden');
+        }
+        // NEW: Play main background music automatically after loading is complete
+        if (mainBackgroundMusic) {
+            console.log('Attempting to load and play main background music after loading screen is hidden...');
+            mainBackgroundMusic.load(); // Ensure it's loaded
+            mainBackgroundMusic.play().then(() => {
+                console.log('Main background music started playing successfully after loading.');
+            }).catch(error => {
+                console.error('Error playing main background music after loading:', error);
+            });
         }
       }, 300); // 300ms delay
 
