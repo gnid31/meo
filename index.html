@@ -822,6 +822,7 @@
     function showScreensaver(songUrl) {
         screensaver.style.display = 'block'; // Make the screensaver visible
         console.log('Song screensaver shown.');
+        console.log('Current bouncingImages array length:', bouncingImages.length); // Debug log
 
         // Clear any previous screensaver key listener to prevent multiple bindings
         if (screensaverKeyListener) {
@@ -854,7 +855,7 @@
 
                 // Stop bouncing image animation and hide it
                 if (bouncingImageAnimation) {
-                    cancelAnimationFrame(bouncingImageAnimation);
+                    clearInterval(bouncingImageAnimation);
                     bouncingImageAnimation = null;
                 }
                 if (bouncingImg) {
@@ -883,23 +884,32 @@
         if (bouncingImg && bouncingImages.length > 0) {
             const randomIndex = Math.floor(Math.random() * bouncingImages.length);
             bouncingImg.src = bouncingImages[randomIndex].src; // Set the image source
+            console.log('Bouncing image src set to:', bouncingImg.src); // Debug log
             bouncingImg.style.display = 'block'; // Ensure image is visible
             bouncingImg.style.position = 'absolute'; // Ensure it's positioned absolutely for animation
 
             // Clear any existing animation
             if (bouncingImageAnimation) {
-                cancelAnimationFrame(bouncingImageAnimation); // Stop current animation
+                clearInterval(bouncingImageAnimation); // Stop current animation
             }
 
             // NEW: Khởi tạo vị trí và tốc độ chỉ một lần ở đây
             let currentX = Math.random() * (window.innerWidth - bouncingImg.offsetWidth);
             let currentY = Math.random() * (window.innerHeight - bouncingImg.offsetHeight);
-            let dx = 1.5 //tốc độ cố định theo trục X xuống 1
+            let dx = 2 //tốc độ cố định theo trục X xuống 1
             let dy = 1// Giảm tốc độ cố định theo trục Y xuống 1
 
-            const animateBounce = () => {
+            console.log('Initial bouncing image dimensions:', bouncingImg.offsetWidth, bouncingImg.offsetHeight); // Debug log
+
+            // Thay thế requestAnimationFrame bằng setInterval
+            bouncingImageAnimation = setInterval(() => { // Lưu ID của interval
                 const imgWidth = bouncingImg.offsetWidth;
                 const imgHeight = bouncingImg.offsetHeight;
+                
+                // Debug log để kiểm tra kích thước ảnh trong animation loop
+                if (imgWidth === 0 || imgHeight === 0) {
+                    console.warn('Bouncing image has zero dimensions, animation might be off. Width:', imgWidth, 'Height:', imgHeight);
+                }
 
                 currentX += dx;
                 currentY += dy;
@@ -941,9 +951,7 @@
                 bouncingImg.style.left = `${currentX}px`;
                 bouncingImg.style.top = `${currentY}px`;
 
-                bouncingImageAnimation = requestAnimationFrame(animateBounce); // Tiếp tục hoạt ảnh
-            };
-            bouncingImageAnimation = requestAnimationFrame(animateBounce); // Bắt đầu hoạt ảnh
+            }, 10); // Hoạt ảnh sẽ chạy mỗi 20 mili giây (khoảng 50 khung hình/giây)
         } else {
             console.warn('bouncingImg hoặc bouncingImages chưa sẵn sàng cho màn hình chờ bài hát. Bỏ qua hoạt ảnh nhảy.');
             if (bouncingImg) bouncingImg.style.display = 'none'; // Đảm bảo ẩn nếu không có hoạt ảnh
@@ -966,7 +974,7 @@
 
                 // Stop bouncing image animation and hide it
                 if (bouncingImageAnimation) {
-                    cancelAnimationFrame(bouncingImageAnimation);
+                    clearInterval(bouncingImageAnimation); // Dừng hoạt ảnh setInterval
                     bouncingImageAnimation = null;
                 }
                 if (bouncingImg) {
@@ -1337,11 +1345,13 @@
 
     // Hàm để đọc danh sách ảnh từ URL và tải trước chúng
     async function loadImages(progressCallback) {
-      console.log('Bắt đầu tải danh sách ảnh...');
+      console.log('Bắt đầu tải danh sách ảnh bouncing...');
       try {
-        const response = await fetch('https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/list.txt');
+        const timestamp = new Date().getTime(); // Cache busting
+        const response = await fetch(`https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/list.txt?t=${timestamp}`);
         const text = await response.text();
         const imageUrls = text.split('\n').filter(url => url.trim() !== '');
+        console.log('Số lượng URL ảnh bouncing đọc được từ list.txt:', imageUrls.length); // Debug log
 
         const promises = imageUrls.map(url => {
           return new Promise(resolve => {
@@ -1350,6 +1360,7 @@
             img.onload = () => {
               bouncingImages.push(img);
               if (progressCallback) progressCallback();
+              console.log('Đã tải thành công ảnh bouncing:', url); // Debug log
               resolve();
             };
             img.onerror = () => {
@@ -1359,7 +1370,7 @@
             };
           });
         });
-        console.log('Đã tạo Promises cho ảnh bouncing. Số lượng:', promises.length);
+        console.log('Đã tạo Promises cho ảnh bouncing. Tổng số:', promises.length);
         return promises;
       } catch (error) {
         console.error('Error loading bouncing image list:', error);
