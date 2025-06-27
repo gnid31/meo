@@ -656,6 +656,9 @@
   <!-- New audio for main background music -->
   <audio id="main-background-music" src="https://github.com/gnid31/meo/raw/main/music/background_music.mp3" loop></audio>
 
+  <!-- NEW audio for slaps sound -->
+  <audio id="slaps-sound" src="https://github.com/gnid31/meo/raw/main/music/slaps1.mp3" loop></audio>
+
   <!-- New success screensaver HTML -->
   <div id="success-screensaver">
     <div id="success-exit-hint">Press any key to exit</div>
@@ -713,6 +716,7 @@
     let successScreensaver;
     let fireworksMusic; // Declare new variable for fireworks music
     let mainBackgroundMusic; // Declare new variable for main background music
+    let slapsSound; // NEW: Declare slaps sound variable
 
     const baseGifDuration = 1580; // Thời gian cơ bản cho GIF (miligiây)
 
@@ -835,6 +839,7 @@
       fireworksMusic = document.getElementById('fireworks-music'); // Get the new fireworks music element
       mainBackgroundMusic = document.getElementById('main-background-music'); // Get the new main background music element
       loadingScreen = document.getElementById('loading-screen'); // NEW: Get the loading screen element
+      slapsSound = document.getElementById('slaps-sound'); // NEW: Get the slaps sound element
 
       // NEW: Get loading screen elements
       let loadingCatGif = document.getElementById('loading-cat-gif');
@@ -944,6 +949,19 @@
 
           if (attemptsLeft <= 0) {
             questionBox.style.display = 'none';
+            if (slapsSound) { // NEW: Play slaps sound when attempts run out
+                slapsSound.currentTime = 0; // Reset sound to beginning
+                slapsSound.play().catch(e => console.error('Error playing slaps sound:', e));
+            }
+            if (errorSound) { // Ensure error sound is stopped if it was playing
+                errorSound.pause();
+                errorSound.currentTime = 0;
+            }
+            if (mainBackgroundMusic) { // NEW: Pause main background music when slaps sound plays
+                mainBackgroundMusic.pause();
+                mainBackgroundMusic.currentTime = 0;
+                console.log('Main background music stopped due to slaps sound.');
+            }
             lockedScreen.style.display = 'flex';
           } else {
             errorMessage.textContent = 'Sai rồi, lêu lêu!';
@@ -1015,7 +1033,12 @@
               allowExitSuccessScreen = false; // Đặt lại cờ
               activeFireworkElements = []; // Clear all active fireworks
             }
-
+            // NEW: Stop slaps sound if playing when F5 is pressed on locked screen
+            if (slapsSound && lockedScreen.style.display === 'flex') {
+                slapsSound.pause();
+                slapsSound.currentTime = 0;
+                console.log('Slaps sound stopped due to F5 press.');
+            }
           } else if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) { // Thêm điều kiện cờ
             successScreensaver.style.display = 'none';
             if (fireworkInterval) {
