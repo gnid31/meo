@@ -657,7 +657,7 @@
   <audio id="main-background-music" src="https://github.com/gnid31/meo/raw/main/music/background_music.mp3" loop></audio>
 
   <!-- NEW audio for slaps sound -->
-  <audio id="slaps-sound" src="https://github.com/gnid31/meo/raw/main/music/slaps1.mp3" loop></audio>
+  <audio id="slaps-sound" src="https://github.com/gnid31/meo/raw/main/music/slaps2.mp3" loop></audio>
 
   <!-- New success screensaver HTML -->
   <div id="success-screensaver">
@@ -1034,10 +1034,19 @@
               activeFireworkElements = []; // Clear all active fireworks
             }
             // NEW: Stop slaps sound if playing when F5 is pressed on locked screen
-            if (slapsSound && lockedScreen.style.display === 'flex') {
+            if (slapsSound) { // Check if slapsSound element exists
                 slapsSound.pause();
                 slapsSound.currentTime = 0;
                 console.log('Slaps sound stopped due to F5 press.');
+            }
+            // NEW: Play main background music when returning to question screen
+            if (mainBackgroundMusic) {
+                console.log('Attempting to play main background music after F5 reset...');
+                mainBackgroundMusic.play().then(() => {
+                    console.log('Main background music started playing successfully after F5 reset.');
+                }).catch(error => {
+                    console.error('Error playing main background music after F5 reset:', error);
+                });
             }
           } else if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) { // Thêm điều kiện cờ
             successScreensaver.style.display = 'none';
