@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>by gnid31</title>
+  <!-- NEW: Font Awesome CDN for eye icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <link rel="preload" as="image" href="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/box.gif">
   <link rel="preload" as="image" href="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/bite.gif">
   <link rel="preload" as="image" href="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/fight3.gif">
@@ -637,12 +639,38 @@
 
     .signin-container input {
       width: calc(100% - 20px);
-      padding: 12px 10px;
+      padding: 12px 10px; /* Base padding, will be adjusted by .input-group input */
       margin-bottom: 15px;
       border: 2px solid #FF69B4;
       border-radius: 8px;
       font-size: 1.1em;
       box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    }
+
+    /* NEW CSS to hide default browser password reveal icon - More specific targeting */
+
+    /* For Microsoft Edge/IE */
+    .signin-container input[type="password"]::-ms-reveal {
+      display: none;
+    }
+
+    /* For WebKit browsers (Chrome, Safari, Opera) */
+    .signin-container input[type="password"]::-webkit-password-reveal {
+      display: none !important; /* Use !important to override user agent stylesheets */
+      -webkit-appearance: none; /* Ensure no default appearance */
+    }
+
+    /* For Firefox (though it typically doesn't have a built-in eye icon like Chrome/Edge) */
+    .signin-container input[type="password"] {
+      -moz-appearance: none; /* For Firefox */
+      appearance: none; /* General appearance reset */
+    }
+    
+    /* Additionally, hide any auto-fill/credentials buttons that might appear in some browsers */
+    .signin-container input[type="password"]::-webkit-contacts-auto-fill-button,
+    .signin-container input[type="password"]::-webkit-credentials-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
     }
 
     .signin-container button {
@@ -669,6 +697,44 @@
       margin-top: 15px;
       font-weight: bold;
       font-size: 1.1em;
+    }
+
+    /* NEW CSS for Input with Toggle Icon */
+    .input-group {
+      position: relative;
+      margin-bottom: 15px; /* Giữ khoảng cách giữa các nhóm input */
+      width: calc(100% - 20px); /* Kế thừa chiều rộng của input */
+      margin-left: auto; /* Căn giữa */
+      margin-right: auto; /* Căn giữa */
+    }
+
+    .input-group input {
+      width: 100%; /* Đảm bảo input chiếm toàn bộ chiều rộng của group */
+      padding: 12px 35px 12px 10px; /* Thêm padding bên phải cho icon */
+      border: 2px solid #FF69B4;
+      border-radius: 8px;
+      font-size: 1.1em;
+      box-sizing: border-box;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #FF69B4;
+      display: none; /* Hidden by default */
+      z-index: 2; /* Đảm bảo icon nằm trên input */
+    }
+
+    .password-toggle.visible {
+      display: block; /* Show when needed */
+    }
+
+    .input-group small {
+      margin-top: 5px; /* Điều chỉnh lại margin top cho small */
+      margin-bottom: 0px; /* Điều chỉnh lại margin bottom cho small */
     }
   </style>
 </head>
@@ -755,8 +821,23 @@
   <div id="signin-screen" style="display: none;">
     <div class="signin-container">
       <h2>Sign in</h2>
-      <input type="text" id="username-input" placeholder="Full name" required>
-      <input type="password" id="password-input" placeholder="Date of Birth (dd/mm/yy)" required>
+      <div class="input-group">
+        <input type="text" id="username-input" placeholder="Full name" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="password-input" placeholder="Leo's Birthday (dd/mm/yy)" required>
+        <i class="fas fa-eye password-toggle" id="toggle-dob-password"></i>
+       
+      </div>
+      <div class="input-group">
+        <input type="password" id="gnids-birthday-input" placeholder="Capricorn's Birthday (dd/mm/yy)" required>
+        <i class="fas fa-eye password-toggle" id="toggle-gnid-password"></i>
+        
+      </div>
+      <div class="input-group">
+        <input type="password" id="another-input" placeholder="Cancer's Birthday (dd/mm/yy)" required>
+        <i class="fas fa-eye password-toggle" id="toggle-another-password"></i>
+      </div>
       <button id="signin-button">Meo</button>
       <div id="signin-error-message" class="error-message"></div>
     </div>
@@ -782,8 +863,13 @@
     let signinScreen; // NEW: Declare signin screen variable
     let usernameInput; // NEW: Declare username input variable
     let passwordInput; // NEW: Declare password input variable
+    let gnidsBirthdayInput; // NEW: Declare gnid's birthday input variable
     let signinButton; // NEW: Declare signin button variable
     let signinErrorMessage; // NEW: Declare signin error message variable
+    let toggleDobPassword; // NEW: Declare variable for Date of Birth password toggle icon
+    let toggleGnidPassword; // NEW: Declare variable for Gnid's Birthday password toggle icon
+    let anotherInput; // NEW: Declare another input variable
+    let toggleAnotherPassword; // NEW: Declare variable for another input password toggle icon
 
     // Helper function to shuffle an array
     function shuffleArray(array) {
@@ -1125,8 +1211,13 @@
       signinScreen = document.getElementById('signin-screen'); // NEW: Get the sign-in screen element
       usernameInput = document.getElementById('username-input'); // NEW: Get the username input
       passwordInput = document.getElementById('password-input'); // NEW: Get the password input
+      gnidsBirthdayInput = document.getElementById('gnids-birthday-input'); // NEW: Get the gnid's birthday input
       signinButton = document.getElementById('signin-button'); // NEW: Get the sign-in button
       signinErrorMessage = document.getElementById('signin-error-message'); // NEW: Get the error message div
+      toggleDobPassword = document.getElementById('toggle-dob-password'); // NEW: Get the Date of Birth password toggle icon
+      toggleGnidPassword = document.getElementById('toggle-gnid-password'); // NEW: Get the Gnid's Birthday password toggle icon
+      anotherInput = document.getElementById('another-input'); // NEW: Get the new input element
+      toggleAnotherPassword = document.getElementById('toggle-another-password'); // NEW: Get the new input's password toggle icon
 
       // NEW: Ensure bouncing image is hidden initially
       if (bouncingImg) {
@@ -1447,18 +1538,26 @@
       startBackgroundChange();
 
       // NEW: Sign-in logic
-      if (signinButton && usernameInput && passwordInput && signinErrorMessage && splashScreen) {
+      if (signinButton && usernameInput && passwordInput && gnidsBirthdayInput && signinErrorMessage && splashScreen && anotherInput) {
           const correctUsername = 'Kim Thuý Hằng';
-          const correctPassword = '08/08/2004'; // Mật khẩu cứng
+          const correctPassword = '08/08/2004'; // Mật khẩu cứng cho Date of Birth
+          const correctGnidsBirthday = '03/01/2004'; // Mật khẩu cứng cho Gnid's Birthday
+          const correctAnotherField1 = '10/07/2004'; // NEW: Correct value 1 for the new input
+          const correctAnotherField2 = '10/08/2004'; // NEW: Correct value 2 for the new input
 
           const handleSignIn = () => {
-              if (usernameInput.value === correctUsername && passwordInput.value === correctPassword) {
+              if (usernameInput.value === correctUsername &&
+                  passwordInput.value === correctPassword &&
+                  gnidsBirthdayInput.value === correctGnidsBirthday &&
+                  (anotherInput.value === correctAnotherField1 || anotherInput.value === correctAnotherField2)) { // NEW: Include both correct values in the condition
                   signinScreen.classList.add('hidden'); // Hide sign-in screen
                   splashScreen.style.display = 'flex'; // Show splash screen
                   console.log('Đăng nhập thành công! Đã chuyển đến màn hình Mystery Box.');
               } else {
                   signinErrorMessage.textContent = 'Khéo khéo';
-                  passwordInput.value = ''; // Clear password field
+                  // passwordInput.value = ''; // Clear password field
+                  // gnidsBirthdayInput.value = ''; // Clear Gnid's Birthday field
+                  // anotherInput.value = ''; // NEW: Clear the new input field
               }
           };
 
@@ -1466,15 +1565,62 @@
 
           usernameInput.addEventListener('keydown', (e) => {
               if (e.key === 'Enter') {
-                  passwordInput.focus(); // Move focus to password on Enter
+                  passwordInput.focus(); // Chuyển focus từ Full name sang Date of Birth
               }
           });
 
           passwordInput.addEventListener('keydown', (e) => {
               if (e.key === 'Enter') {
-                  handleSignIn(); // Attempt sign-in on Enter
+                  gnidsBirthdayInput.focus(); // Chuyển focus từ Date of Birth sang Gnid's Birthday
               }
           });
+
+          gnidsBirthdayInput.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                  anotherInput.focus(); // NEW: Chuyển focus từ Gnid's Birthday sang Another Field
+              }
+          });
+
+          anotherInput.addEventListener('keydown', (e) => { // NEW: Add keydown listener for the new input
+            if (e.key === 'Enter') {
+                handleSignIn(); // Kích hoạt đăng nhập khi nhấn Enter ở Another Field
+            }
+          });
+
+          // NEW: Logic for password toggle icons
+          const setupPasswordToggle = (inputElement, toggleIcon) => {
+              if (!inputElement || !toggleIcon) {
+                  console.warn('Input element or toggle icon not found for setup:', inputElement, toggleIcon);
+                  return;
+              }
+
+              // Show/hide icon based on input value
+              const checkInputForIconVisibility = () => {
+                  if (inputElement.value.length > 0) {
+                      toggleIcon.classList.add('visible');
+                  } else {
+                      toggleIcon.classList.remove('visible');
+                  }
+              };
+
+              inputElement.addEventListener('input', checkInputForIconVisibility);
+              // Also check on load, in case there's pre-filled value
+              checkInputForIconVisibility(); 
+
+              toggleIcon.addEventListener('click', () => {
+                  // Toggle the type attribute
+                  const type = inputElement.getAttribute('type') === 'password' ? 'text' : 'password';
+                  inputElement.setAttribute('type', type);
+                  // Toggle the icon
+                  toggleIcon.classList.toggle('fa-eye');
+                  toggleIcon.classList.toggle('fa-eye-slash');
+              });
+          };
+
+          setupPasswordToggle(passwordInput, toggleDobPassword);
+          setupPasswordToggle(gnidsBirthdayInput, toggleGnidPassword);
+          setupPasswordToggle(anotherInput, toggleAnotherPassword); // NEW: Setup toggle for the new input
+
       } else {
           console.error('Một hoặc nhiều phần tử đăng nhập không được tìm thấy trong DOM.');
       }
