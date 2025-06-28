@@ -1229,6 +1229,27 @@
       loadingBar = document.querySelector('.loading-bar');
       loadingPercentageText = document.getElementById('loading-percentage');
 
+      // NEW: Define the global volume adjustment listener once
+      const handleVolumeAdjustment = (e) => {
+          e.preventDefault(); // Prevent page scrolling
+          const volumeChange = e.deltaY > 0 ? -0.05 : 0.05; // Scroll down to decrease, scroll up to increase
+
+          // Prioritize: individual song (screensaver), then fireworks music, then main background music
+          if (myAudio && !myAudio.paused) {
+              myAudio.volume = Math.max(0, Math.min(1, myAudio.volume + volumeChange));
+              console.log('Individual song volume changed to:', myAudio.volume);
+          } else if (fireworksMusic && !fireworksMusic.paused) {
+              fireworksMusic.volume = Math.max(0, Math.min(1, fireworksMusic.volume + volumeChange));
+              console.log('Fireworks music volume changed to:', fireworksMusic.volume);
+          } else if (mainBackgroundMusic && !mainBackgroundMusic.paused) {
+              mainBackgroundMusic.volume = Math.max(0, Math.min(1, mainBackgroundMusic.volume + volumeChange));
+              console.log('Main background music volume changed to:', mainBackgroundMusic.volume);
+          }
+      };
+
+      // Attach the global volume listener
+      window.addEventListener('wheel', handleVolumeAdjustment, { passive: false });
+
       // Logic tải tài nguyên và cập nhật tiến độ
       let totalAssetsToLoad = 0;
       let loadedAssetsCount = 0;
