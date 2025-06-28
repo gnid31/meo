@@ -592,11 +592,89 @@
       text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
       margin-top: 20px; /* Khoảng cách từ thanh loading */
     }
+
+    /* NEW CSS for Sign-in Screen */
+    #signin-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #FFC0CB; /* Match splash screen background */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9998; /* Below splash screen but above main content */
+      color: white;
+      text-align: center;
+      transition: opacity 0.5s ease-out;
+    }
+
+    #signin-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .signin-container {
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .signin-container h2 {
+      color: #FF69B4;
+      margin-bottom: 25px;
+      font-size: 2.2em;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .signin-container input {
+      width: calc(100% - 20px);
+      padding: 12px 10px;
+      margin-bottom: 15px;
+      border: 2px solid #FF69B4;
+      border-radius: 8px;
+      font-size: 1.1em;
+      box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    }
+
+    .signin-container button {
+      background-color: #FF1493;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 10px;
+      font-size: 1.5em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      width: 100%;
+    }
+
+    .signin-container button:hover {
+      background-color: #e60073;
+      transform: translateY(-2px);
+    }
+
+    #signin-error-message {
+      color: red;
+      margin-top: 15px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
   </style>
 </head>
 
 <body>
-  <div id="splash-screen">
+  <div id="splash-screen" style="display: none;">
     <div id="mystery-text">Mystery Box</div>
     <img id="gift-box"
       src="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/box.gif"
@@ -608,7 +686,7 @@
     <div><strong>Câu hỏi bí mật:</strong> Chuỗi đổi màu lúc bao nhiu tủi???</div>
     <input type="text" id="secret-answer" placeholder="Nhập câu trả lời..."
       style="padding: 10px; font-size: 1em; margin-top: 15px; width: 80%;">
-    <button id="submit-answer">Trả lời</button>
+    <button id="submit-answer">Meooo</button>
     <div id="error-message"></div>
     <div id="attempts-left"></div>
     <!-- New GIF overlay -->
@@ -673,6 +751,17 @@
     <div class="loading-text">Loading <span id="loading-percentage">0</span>%</div>
   </div>
 
+  <!-- NEW: Sign-in Screen HTML -->
+  <div id="signin-screen" style="display: none;">
+    <div class="signin-container">
+      <h2>Sign in</h2>
+      <input type="text" id="username-input" placeholder="Full name" required>
+      <input type="password" id="password-input" placeholder="Date of Birth (dd/mm/yy)" required>
+      <button id="signin-button">Meo</button>
+      <div id="signin-error-message" class="error-message"></div>
+    </div>
+  </div>
+
   <script>
     console.log("Script loaded and starting execution.");
 
@@ -689,6 +778,12 @@
     let shuffledSuccessScreenAssets = []; // NEW: Global array for shuffled assets
     let loadingScreen; // NEW: Declare loading screen variable
     let bouncingImageAnimation = null; // NEW: Global variable for the bouncing image animation frame
+    let slapsSound; // NEW: Declare slaps sound variable
+    let signinScreen; // NEW: Declare signin screen variable
+    let usernameInput; // NEW: Declare username input variable
+    let passwordInput; // NEW: Declare password input variable
+    let signinButton; // NEW: Declare signin button variable
+    let signinErrorMessage; // NEW: Declare signin error message variable
 
     // Helper function to shuffle an array
     function shuffleArray(array) {
@@ -717,7 +812,9 @@
     let successScreensaver;
     let fireworksMusic; // Declare new variable for fireworks music
     let mainBackgroundMusic; // Declare new variable for main background music
-    let slapsSound; // NEW: Declare slaps sound variable
+    let loadingCatGif;
+    let loadingBar;
+    let loadingPercentageText;
 
     const baseGifDuration = 1580; // Thời gian cơ bản cho GIF (miligiây)
 
@@ -1025,6 +1122,11 @@
       mainBackgroundMusic = document.getElementById('main-background-music'); // Get the new main background music element
       loadingScreen = document.getElementById('loading-screen'); // NEW: Get the loading screen element
       slapsSound = document.getElementById('slaps-sound'); // NEW: Get the slaps sound element
+      signinScreen = document.getElementById('signin-screen'); // NEW: Get the sign-in screen element
+      usernameInput = document.getElementById('username-input'); // NEW: Get the username input
+      passwordInput = document.getElementById('password-input'); // NEW: Get the password input
+      signinButton = document.getElementById('signin-button'); // NEW: Get the sign-in button
+      signinErrorMessage = document.getElementById('signin-error-message'); // NEW: Get the error message div
 
       // NEW: Ensure bouncing image is hidden initially
       if (bouncingImg) {
@@ -1032,9 +1134,9 @@
       }
 
       // NEW: Get loading screen elements
-      let loadingCatGif = document.getElementById('loading-cat-gif');
-      let loadingBar = document.querySelector('.loading-bar');
-      let loadingPercentageText = document.getElementById('loading-percentage');
+      loadingCatGif = document.getElementById('loading-cat-gif');
+      loadingBar = document.querySelector('.loading-bar');
+      loadingPercentageText = document.getElementById('loading-percentage');
 
       // Logic tải tài nguyên và cập nhật tiến độ
       let totalAssetsToLoad = 0;
@@ -1328,6 +1430,11 @@
                 console.error('Error playing main background music after loading:', error);
             });
         }
+        // NEW: Show sign-in screen after loading is complete
+        if (signinScreen) {
+            signinScreen.style.display = 'flex';
+            usernameInput.focus(); // Focus on username input
+        }
       }, 300); // 300ms delay
 
       console.log('Hoàn thành tải ảnh');
@@ -1338,6 +1445,39 @@
 
       // Start background change only after wallpapers are loaded
       startBackgroundChange();
+
+      // NEW: Sign-in logic
+      if (signinButton && usernameInput && passwordInput && signinErrorMessage && splashScreen) {
+          const correctUsername = 'Kim Thuý Hằng';
+          const correctPassword = '08/08/2004'; // Mật khẩu cứng
+
+          const handleSignIn = () => {
+              if (usernameInput.value === correctUsername && passwordInput.value === correctPassword) {
+                  signinScreen.classList.add('hidden'); // Hide sign-in screen
+                  splashScreen.style.display = 'flex'; // Show splash screen
+                  console.log('Đăng nhập thành công! Đã chuyển đến màn hình Mystery Box.');
+              } else {
+                  signinErrorMessage.textContent = 'Khéo khéo';
+                  passwordInput.value = ''; // Clear password field
+              }
+          };
+
+          signinButton.addEventListener('click', handleSignIn);
+
+          usernameInput.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                  passwordInput.focus(); // Move focus to password on Enter
+              }
+          });
+
+          passwordInput.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') {
+                  handleSignIn(); // Attempt sign-in on Enter
+              }
+          });
+      } else {
+          console.error('Một hoặc nhiều phần tử đăng nhập không được tìm thấy trong DOM.');
+      }
     });
 
 
