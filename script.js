@@ -828,14 +828,14 @@ document.addEventListener('DOMContentLoaded', async () => {
               questionBox.style.display = 'block';
               answerInput.focus();
               console.log('Login successful after BSOD. Moving to Question Box.');
-              toggleSnowfall(false); // Dừng tuyết rơi khi thoát BSOD sau đăng nhập thành công
+              toggleSnowfall(true); // Bật tuyết rơi khi vào question-box sau BSOD
           } else {
               // If login was unsuccessful, go back to sign-in screen
               if (signinScreen) {
                   signinScreen.style.display = 'flex';
                   usernameInput.focus();
                   console.log('Login unsuccessful after BSOD. Returning to Sign-in Screen.');
-                  toggleSnowfall(true); // Bắt đầu tuyết rơi khi quay lại màn hình đăng nhập
+                  toggleSnowfall(true); // Bật tuyết rơi khi quay lại màn hình đăng nhập
 
                   // Play main background music when sign-in screen is shown (only once)
                   if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
@@ -1140,6 +1140,7 @@ function handleBlackScreenInteraction() {
     blackScreen.style.display = 'none'; // Ẩn màn hình đen
     bsodScreen.style.display = 'flex'; // Hiển thị màn hình BSOD
     // Đảm bảo không có nhạc phát ở đây
+    // Khi vào BSOD, không bật/tắt tuyết rơi ở đây
 }
 
 function handleBSODInteraction() {
@@ -1150,11 +1151,12 @@ function handleBSODInteraction() {
         // Nếu đăng nhập đúng, chỉ chuyển đến màn hình hộp bí ẩn (splashScreen)
         signinScreen.style.display = 'none'; // Ẩn màn hình đăng nhập
         signinScreen.classList.add('hidden');
-        toggleSnowfall(false);
+        // Không tắt tuyết rơi ở đây
 
         splashScreen.style.display = 'flex'; // HIỂN THỊ MÀN HÌNH HỘP BÍ ẨN
         splashScreen.classList.remove('hidden');
         questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn
+        toggleSnowfall(true); // Bật tuyết rơi khi vào splash
 
         console.log('Sau BSOD: Đăng nhập đúng, chuyển đến màn hình hộp bí ẩn.');
         if (mainBackgroundMusic) { 
@@ -1224,4 +1226,29 @@ function showToast(message, duration = 3000) {
         setTimeout(removeToastHandler, transitionDurationMs + buffer);
 
     }, duration);
+}
+
+// Các hàm hiển thị màn hình mới
+function showSplashScreen() {
+  splashScreen.style.display = 'flex';
+  splashScreen.classList.remove('hidden');
+  questionBox.style.display = 'none';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào splash
+}
+
+function showQuestionBox() {
+  questionBox.style.display = 'block';
+  splashScreen.classList.add('hidden');
+  splashScreen.style.display = 'none';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào question-box
+}
+
+function showSongSelector() {
+  document.querySelector('.container').style.display = 'block';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào song-selector
+}
+
+function showFireworkScreen() {
+  successScreensaver.style.display = 'block';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào firework
 }
