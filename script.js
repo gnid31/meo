@@ -894,7 +894,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let pos = 0;
-    const speed = 0.8; // px mỗi frame
+    const speed = 0.6; // px mỗi frame
     const buttonWidth = songButtons.children[0].offsetWidth + 12; // 12px gap
     const totalWidth = buttonWidth * buttonCount;
 
