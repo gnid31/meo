@@ -727,6 +727,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                   splashScreen.classList.remove('hidden'); // Đảm bảo nó hiển thị đúng cách
                   questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn
 
+                  // NEW: Khi vào màn song-selector, bật lại tuyết rơi
+                  setTimeout(() => { toggleSnowfall(true); }, 350);
+
                   console.log('Subsequent login successful. Moving to Splash Screen.');
                   // Ensure error message is hidden upon successful login (if it was ever shown before)
                   if (signinErrorMessage) {
