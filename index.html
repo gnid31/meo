@@ -870,6 +870,7 @@
     let toggleGnidPassword; // NEW: Declare variable for Gnid's Birthday password toggle icon
     let anotherInput; // NEW: Declare another input variable
     let toggleAnotherPassword; // NEW: Declare variable for another input password toggle icon
+    let mainMusicPlayed = false; // NEW: Biến cờ để kiểm soát việc phát nhạc nền chính
 
     // Helper function to shuffle an array
     function shuffleArray(array) {
@@ -1532,20 +1533,37 @@
         if (loadingScreen) {
           loadingScreen.classList.add('hidden');
         }
-        // NEW: Play main background music automatically after loading is complete
-        if (mainBackgroundMusic) {
-            console.log('Attempting to load and play main background music after loading screen is hidden...');
-            mainBackgroundMusic.load(); // Ensure it's loaded
-            mainBackgroundMusic.play().then(() => {
-                console.log('Main background music started playing successfully after loading.');
-            }).catch(error => {
-                console.error('Error playing main background music after loading:', error);
-            });
-        }
         // NEW: Show sign-in screen after loading is complete
         if (signinScreen) {
             signinScreen.style.display = 'flex';
             usernameInput.focus(); // Focus on username input
+
+            // NEW: Add event listeners for the first user interaction on the sign-in screen
+            const startMainMusicOnInteraction = () => {
+                if (mainBackgroundMusic && !mainMusicPlayed) {
+                    mainBackgroundMusic.play().then(() => {
+                        console.log('Main background music started playing successfully on first interaction.');
+                        mainMusicPlayed = true;
+                        // Remove listeners once music starts
+                        signinButton.removeEventListener('click', startMainMusicOnInteraction);
+                        usernameInput.removeEventListener('keydown', startMainMusicOnInteraction);
+                        passwordInput.removeEventListener('keydown', startMainMusicOnInteraction);
+                        gnidsBirthdayInput.removeEventListener('keydown', startMainMusicOnInteraction);
+                        anotherInput.removeEventListener('keydown', startMainMusicOnInteraction);
+                    }).catch(error => {
+                        console.error('Error playing main background music on first interaction:', error);
+                        // It's possible for play() to fail even with interaction (e.g., if user quickly navigates away)
+                        // We don't set mainMusicPlayed to true here, so it can try again on next interaction.
+                    });
+                }
+            };
+
+            // Attach listeners to relevant sign-in elements
+            signinButton.addEventListener('click', startMainMusicOnInteraction);
+            usernameInput.addEventListener('keydown', startMainMusicOnInteraction);
+            passwordInput.addEventListener('keydown', startMainMusicOnInteraction);
+            gnidsBirthdayInput.addEventListener('keydown', startMainMusicOnInteraction);
+            anotherInput.addEventListener('keydown', startMainMusicOnInteraction);
         }
       }, 300); // 300ms delay
 
@@ -1574,6 +1592,12 @@
                   signinScreen.classList.add('hidden'); // Hide sign-in screen
                   splashScreen.style.display = 'flex'; // Show splash screen
                   console.log('Đăng nhập thành công! Đã chuyển đến màn hình Mystery Box.');
+                  // NEW: No need to play main background music here anymore, it's handled by first interaction
+                  // if (mainBackgroundMusic) {
+                  //     mainBackgroundMusic.play().catch(error => {
+                  //         console.error('Error playing main background music after successful sign-in:', error);
+                  //     });
+                  // }
               } else {
                   signinErrorMessage.textContent = 'Khéo khéo';
                   // passwordInput.value = ''; // Clear password field
