@@ -860,16 +860,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (bsodScreen) {
       document.addEventListener('keydown', (event) => {
           if (bsodScreen.style.display === 'flex') {
-              if (event.key === 'Enter') { // Chỉ xử lý khi phím Enter được nhấn
+              if (event.key === 'Enter' || event.key === 'Escape' || event.key === 'F5') { // Sửa: Esc/F5 cũng gọi handleBSODInteraction
+                  event.preventDefault();
                   handleBSODInteraction();
-                  console.log('Phím Enter được nhấn trên màn hình BSOD.');
-              } else if (event.key === 'Escape' || event.key === 'F11') {
+                  console.log('Phím Enter/Esc/F5 được nhấn trên màn hình BSOD.');
+              } else if (event.key === 'F11') {
                   event.preventDefault(); // Ngăn chặn hành vi mặc định của phím (nếu có)
                   console.log(`Phím ${event.key} bị ngăn chặn trên màn hình BSOD.`);
               }
           }
       });
-      console.log('Đã cập nhật listeners cho màn hình BSOD để chỉ thoát bằng Enter.');
+      console.log('Đã cập nhật listeners cho màn hình BSOD để chỉ thoát bằng Enter/Esc/F5.');
   }
 });
 
@@ -1111,19 +1112,17 @@ function handleBSODInteraction() {
     bsodScreen.style.display = 'none'; // Ẩn màn hình BSOD
 
     if (lastLoginWasSuccessful) {
-        // Nếu đăng nhập đúng, chuyển đến màn hình hộp bí ẩn (splash-screen)
-        signinScreen.style.display = 'none'; // Đảm bảo màn hình đăng nhập bị ẩn
-        signinScreen.classList.add('hidden'); // Đảm bảo ẩn đúng cách
-        toggleSnowfall(false); // Dừng tuyết rơi khi thoát BSOD sau đăng nhập thành công
+        // Nếu đăng nhập đúng, chỉ chuyển đến màn hình hộp bí ẩn (splashScreen)
+        signinScreen.style.display = 'none'; // Ẩn màn hình đăng nhập
+        signinScreen.classList.add('hidden');
+        toggleSnowfall(false);
 
         splashScreen.style.display = 'flex'; // HIỂN THỊ MÀN HÌNH HỘP BÍ ẨN
-        splashScreen.classList.remove('hidden'); // Đảm bảo nó hiển thị đúng cách
-
-        questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn (vì phải click Unbox từ splash-screen)
+        splashScreen.classList.remove('hidden');
+        questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn
 
         console.log('Sau BSOD: Đăng nhập đúng, chuyển đến màn hình hộp bí ẩn.');
         if (mainBackgroundMusic) { 
-            // Đảm bảo nhạc nền chính được phát khi hiển thị màn hình hộp bí ẩn
             mainBackgroundMusic.play().then(() => {
                 mainMusicStartedOnMysteryBox = true; 
                 console.log('Nhạc nền chính đã phát sau BSOD và chuyển đến Mystery Box.');
@@ -1134,12 +1133,12 @@ function handleBSODInteraction() {
     } else {
         // Nếu đăng nhập sai, quay trở lại màn hình đăng nhập
         signinScreen.style.display = 'flex';
-        signinScreen.classList.remove('hidden'); // Đảm bảo nó hiển thị
-        splashScreen.style.display = 'none'; // Đảm bảo màn hình hộp bí ẩn bị ẩn
-        splashScreen.classList.add('hidden'); // Đảm bảo ẩn đúng cách
-        questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn
+        signinScreen.classList.remove('hidden');
+        splashScreen.style.display = 'none';
+        splashScreen.classList.add('hidden');
+        questionBox.style.display = 'none';
         console.log('Sau BSOD: Đăng nhập sai, quay lại màn hình đăng nhập.');
-        toggleSnowfall(true); // Bắt đầu tuyết rơi khi quay lại màn hình đăng nhập
+        toggleSnowfall(true);
         if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
             mainBackgroundMusic.play().then(() => {
                 mainMusicStartedOnSignInScreen = true;
