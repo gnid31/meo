@@ -159,12 +159,19 @@ function toggleSnowfall(shouldStart, flakeInterval = 133) {
 }
 
 const songList = [
-  "https://github.com/gnid31/meo/raw/main/music/id_072019.mp3",
-  "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3",
-  "https://github.com/gnid31/meo/raw/main/music/hen_mot_mai.mp3",
-  "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3",
-  "https://github.com/gnid31/meo/raw/main/music/neu_ngay_ay.mp3",
-  "https://github.com/gnid31/meo/raw/main/music/gia_nhu_em_nhin_lai.mp3",
+  "https://github.com/gnid31/meo/raw/main/music/id_072019.mp3", // meo 8
+  "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 20
+  "https://github.com/gnid31/meo/raw/main/music/hen_mot_mai.mp3", // meo 7
+  "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3", // meo 0
+  "https://github.com/gnid31/meo/raw/main/music/neu_ngay_ay.mp3", // meo 13 (old)
+  "https://github.com/gnid31/meo/raw/main/music/gia_nhu_em_nhin_lai.mp3", // meo 6 (old)
+  "https://github.com/gnid31/meo/raw/main/music/nothing_gonna_change_my_love_for_you.mp3", // meo 1 (new)
+  "https://github.com/gnid31/meo/raw/main/music/hon_ca_yeu.mp3", // meo 3 (new)
+  "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3", // meo 3 (new)
+  "https://github.com/gnid31/meo/raw/main/music/u_co_anh_day.mp3", // meo 9 (new)
+  "https://github.com/gnid31/meo/raw/main/music/lac_nhau_co_phai_muon_doi.mp3", // meo 5 (new)
+  "https://github.com/gnid31/meo/raw/main/music/anh_nang_cua_anh.mp3", // meo 4 (new)
+  "https://github.com/gnid31/meo/raw/main/music/my_everything.mp3", // meo 2 (new)
 ];
 
 let screensaverKeyListener = null;
@@ -872,6 +879,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       console.log('Đã cập nhật listeners cho màn hình BSOD để chỉ thoát bằng Enter/Esc/F5.');
   }
+
+  // Hiệu ứng băng chuyền cho các nút nhạc
+  (function setupCarousel() {
+    const track = document.getElementById('carousel-track');
+    const songButtons = document.getElementById('song-buttons');
+    if (!track || !songButtons) return;
+
+    // Lặp lại các button để tạo hiệu ứng vô hạn
+    const buttonCount = songButtons.children.length;
+    for (let i = 0; i < buttonCount; i++) {
+      const clone = songButtons.children[i].cloneNode(true);
+      songButtons.appendChild(clone);
+    }
+
+    let pos = 0;
+    const speed = 0.8; // px mỗi frame
+    const buttonWidth = songButtons.children[0].offsetWidth + 12; // 12px gap
+    const totalWidth = buttonWidth * buttonCount;
+
+    function animate() {
+      pos += speed;
+      if (pos >= totalWidth) pos = 0;
+      track.style.transform = `translateX(${-pos}px)`;
+      // Hiệu ứng mờ dần khi ra mép (bằng mask đã có trong CSS)
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
 });
 
 

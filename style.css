@@ -200,12 +200,45 @@ p {
   animation: glowText 1.5s ease-in-out infinite alternate;
 }
 
-#song-buttons {
+#song-selector {
+  position: relative;
+  overflow: visible;
+  min-height: 80px;
+  height: auto;
+  padding: 10px;
+  margin-top: 20px;
+}
+
+.carousel-mask {
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  position: relative;
+  height: 60px;
+  margin: 0 auto;
+  /* Hiệu ứng mask mờ hai bên */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+#carousel-track {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
+  height: 60px;
+  will-change: transform;
+  transition: none;
+}
+
+#song-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+  padding: 0;
 }
 
 #song-buttons button {
@@ -213,12 +246,13 @@ p {
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 5px 8px;
+  padding: 8px 18px;
   margin: 0;
   font-size: 1em;
   cursor: pointer;
-  transition: transform 0.2s ease;
-  width: auto;
+  transition: transform 0.2s ease, opacity 0.3s;
+  min-width: 80px;
+  opacity: 1;
 }
 
 #song-buttons button:hover {
@@ -226,6 +260,39 @@ p {
   transform: scale(1.05);
 }
 
+@media (max-width: 600px) {
+  .container {
+    padding: 25px 30px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  p {
+    font-size: 1.1em;
+  }
+
+  #mystery-text {
+    font-size: 2.5em;
+  }
+
+  #gift-box {
+    width: 120px;
+    height: 120px;
+  }
+
+  #claim-button {
+    font-size: 1.5em;
+    padding: 12px 30px;
+  }
+
+  #song-buttons button {
+    min-width: 60px;
+    font-size: 0.9em;
+    padding: 6px 10px;
+  }
+}
 
 @keyframes glowText {
   from {
@@ -289,7 +356,6 @@ p {
   pointer-events: none;
 }
 
-
 @media (max-width: 600px) {
   .container {
     padding: 25px 30px;
@@ -315,6 +381,14 @@ p {
   #claim-button {
     font-size: 1.5em;
     padding: 12px 30px;
+  }
+
+  #song-buttons button {
+    width: calc(33.33% - 10px);
+  }
+
+  #song-buttons button:nth-child(n+7) {
+    width: calc(33.33% - 10px);
   }
 }
 
@@ -791,4 +865,4 @@ p {
 .toast.hide {
     opacity: 0;
     transform: translateY(-150%);
-} 
+}
