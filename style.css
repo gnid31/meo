@@ -725,6 +725,7 @@ p {
   display: none; /* Hidden by default */
   justify-content: center; /* For centering content if any */
   align-items: center; /* For centering content if any */
+  cursor: none; /* NEW: Ẩn con trỏ chuột */
 }
 
 /* NEW CSS for BSOD Screen */
@@ -740,6 +741,7 @@ p {
   justify-content: center;
   align-items: center;
   overflow: hidden; /* Prevent scrollbars if image overflows slightly */
+  cursor: none; /* NEW: Ẩn con trỏ chuột */
 }
 
 #bsod-screen img {

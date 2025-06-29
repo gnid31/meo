@@ -31,7 +31,8 @@ let mainMusicStartedOnMysteryBox = false;
 let firstSignInAttemptDone = false;
 let lastLoginWasSuccessful = false;
 let loadingPercentageText;
-let toastContainer; // NEW: Khai báo biến cho toast container
+let toastContainer;
+let snowfallInterval = null;
 
 // Helper function to shuffle an array
 function shuffleArray(array) {
@@ -143,8 +144,18 @@ function createSnowflake() {
   };
 }
 
-function startSnowfall(flakeInterval = 133) {
-  setInterval(createSnowflake, flakeInterval);
+// Hàm để bật/tắt tuyết rơi
+function toggleSnowfall(shouldStart, flakeInterval = 133) {
+    if (shouldStart && snowfallInterval === null) {
+        console.log("Starting snowfall...");
+        snowfallInterval = setInterval(createSnowflake, flakeInterval);
+    } else if (!shouldStart && snowfallInterval !== null) {
+        console.log("Stopping snowfall.");
+        clearInterval(snowfallInterval);
+        snowfallInterval = null;
+        // Also remove existing snowflakes
+        document.querySelectorAll('.snowflake').forEach(flake => flake.remove());
+    }
 }
 
 const songList = [
@@ -357,18 +368,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   bsodScreen = document.getElementById('bsod-screen');
   bsodImage = document.getElementById('bsod-image');
 
-  // NEW: Ensure bouncing image is hidden initially
+  // Ensure bouncing image is hidden initially
   if (bouncingImg) {
       bouncingImg.style.display = 'none';
   }
 
-  // NEW: Get loading screen elements
+  // Get loading screen elements
   loadingCatGif = document.getElementById('loading-cat-gif');
   loadingBar = document.querySelector('.loading-bar');
   loadingPercentageText = document.getElementById('loading-percentage');
-  toastContainer = document.getElementById('toast-container'); // NEW: Gán giá trị cho toast container
+  toastContainer = document.getElementById('toast-container');
 
-  // NEW: Define the global volume adjustment listener once
+  // Define the global volume adjustment listener once
   const handleVolumeAdjustment = (e) => {
       e.preventDefault();
       const volumeChange = e.deltaY > 0 ? -0.05 : 0.05;
@@ -451,7 +462,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           });
         }
-        startSnowfall();
       }, 100);
 
     } else {
@@ -648,6 +658,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (signinScreen) {
         signinScreen.style.display = 'flex';
         usernameInput.focus(); // Focus on username input
+        toggleSnowfall(true); // Bắt đầu tuyết rơi trên màn hình đăng nhập
     }
     
     // Ensure blackScreen, bsodScreen and splashScreen are hidden initially
@@ -685,6 +696,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               firstSignInAttemptDone = true; // Mark as done
 
               signinScreen.classList.add('hidden'); // Hide sign-in screen
+              toggleSnowfall(false); // Dừng tuyết rơi khi ẩn màn hình đăng nhập
               
               // Show black screen and request fullscreen
               if (blackScreen) {
@@ -699,11 +711,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                       document.documentElement.msRequestFullscreen();
                   }
                   console.log('Black screen displayed and fullscreen requested after FIRST sign-in button click.');
+                  // Tự động chuyển sang BSOD sau 10 giây
+                  setTimeout(() => {
+                      handleBlackScreenInteraction();
+                  }, 10000); // 10000 milliseconds = 10 giây
               }
           } else {
               // Subsequent sign-in attempts
               if (lastLoginWasSuccessful) {
                   signinScreen.classList.add('hidden'); // Hide sign-in screen
+                  toggleSnowfall(false); // Dừng tuyết rơi khi ẩn màn hình đăng nhập
                   
                   // CHỈNH SỬA: Chuyển đến màn hình hộp bí ẩn (splash-screen)
                   splashScreen.style.display = 'flex'; // HIỂN THỊ MÀN HÌNH HỘP BÍ ẨN
@@ -718,7 +735,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   }
               } else {
                   // If login unsuccessful, stay on sign-in screen and show error
-                  showToast('Khéo khéo');
+                  showToast('Khéo khéo'); // Gọi showToast mỗi lần đăng nhập sai
 
                   setupPasswordToggle(passwordInput, toggleDobPassword);
                   setupPasswordToggle(gnidsBirthdayInput, toggleGnidPassword);
@@ -748,7 +765,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
       });
 
-      // NEW: Add event listener for the last input field to trigger sign-in on Enter
+      // Add event listener for the last input field to trigger sign-in on Enter
       anotherInput.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
               e.preventDefault(); // Prevent default form submission behavior
@@ -795,24 +812,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (bsodScreen.style.display === 'flex' && (e.key === 'Escape' || e.key === 'F5')) {
           e.preventDefault();
           bsodScreen.style.display = 'none';
-          // Exit fullscreen if active
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          }
           
           if (lastLoginWasSuccessful) {
               // If login was successful, go to the question box
               questionBox.style.display = 'block';
               answerInput.focus();
               console.log('Login successful after BSOD. Moving to Question Box.');
+              toggleSnowfall(false); // Dừng tuyết rơi khi thoát BSOD sau đăng nhập thành công
           } else {
               // If login was unsuccessful, go back to sign-in screen
               if (signinScreen) {
                   signinScreen.style.display = 'flex';
                   usernameInput.focus();
                   console.log('Login unsuccessful after BSOD. Returning to Sign-in Screen.');
+                  toggleSnowfall(true); // Bắt đầu tuyết rơi khi quay lại màn hình đăng nhập
 
-                  // NEW: Play main background music when sign-in screen is shown (only once)
+                  // Play main background music when sign-in screen is shown (only once)
                   if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
                       mainBackgroundMusic.play().then(() => {
                           console.log('Main background music started playing successfully on sign-in screen after BSOD exit.');
@@ -826,30 +841,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
   });
 
-  // Đảm bảo các listener này được thiết lập sau khi các phần tử màn hình đen và BSOD được tạo
-  // Thêm listeners cho màn hình đen để chuyển sang BSOD
-  if (blackScreen) {
-      blackScreen.addEventListener('click', handleBlackScreenInteraction);
-      // Listen for keydown events globally on the document
-      document.addEventListener('keydown', (event) => {
-          if (blackScreen.style.display === 'block') {
-              if (event.key === 'Escape' || event.key === 'F11') {
-                  event.preventDefault(); // Ngăn chặn hành vi mặc định của phím (nếu có)
-                  console.log(`Phím ${event.key} bị ngăn chặn trên màn hình đen.`);
-              } else {
-                  handleBlackScreenInteraction(); // Vẫn cho phép các phím khác chuyển sang BSOD
-              }
+  // Loại bỏ các listener tương tác người dùng cho màn hình đen
+  document.addEventListener('keydown', (event) => {
+      if (blackScreen.style.display === 'block') {
+          if (event.key === 'Escape' || event.key === 'F11') {
+              event.preventDefault(); // Ngăn chặn hành vi mặc định của phím (nếu có)
+              console.log(`Phím ${event.key} bị ngăn chặn trên màn hình đen.`);
           }
-      });
-      console.log('Đã thiết lập listeners cho màn hình đen.');
-  }
+      }
+  });
+  console.log('Đã cập nhật listeners cho màn hình đen.');
+
 
   // Add event listeners for the BSOD screen to return to sign-in or mystery box
   if (bsodScreen) {
-      // Xóa bỏ listener click trên màn hình BSOD (đã làm ở bước trước)
-      // bsodScreen.addEventListener('click', handleBSODInteraction);
-
-      // Sửa đổi listener keydown cho màn hình BSOD để chỉ phản hồi phím Enter
       document.addEventListener('keydown', (event) => {
           if (bsodScreen.style.display === 'flex') {
               if (event.key === 'Enter') { // Chỉ xử lý khi phím Enter được nhấn
@@ -1106,6 +1111,7 @@ function handleBSODInteraction() {
         // Nếu đăng nhập đúng, chuyển đến màn hình hộp bí ẩn (splash-screen)
         signinScreen.style.display = 'none'; // Đảm bảo màn hình đăng nhập bị ẩn
         signinScreen.classList.add('hidden'); // Đảm bảo ẩn đúng cách
+        toggleSnowfall(false); // Dừng tuyết rơi khi thoát BSOD sau đăng nhập thành công
 
         splashScreen.style.display = 'flex'; // HIỂN THỊ MÀN HÌNH HỘP BÍ ẨN
         splashScreen.classList.remove('hidden'); // Đảm bảo nó hiển thị đúng cách
@@ -1130,6 +1136,7 @@ function handleBSODInteraction() {
         splashScreen.classList.add('hidden'); // Đảm bảo ẩn đúng cách
         questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn
         console.log('Sau BSOD: Đăng nhập sai, quay lại màn hình đăng nhập.');
+        toggleSnowfall(true); // Bắt đầu tuyết rơi khi quay lại màn hình đăng nhập
         if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
             mainBackgroundMusic.play().then(() => {
                 mainMusicStartedOnSignInScreen = true;
@@ -1143,6 +1150,11 @@ function handleBSODInteraction() {
 
 // Helper function to show a toast notification
 function showToast(message, duration = 3000) {
+    // NEW: Xóa tất cả các toast cũ trước khi thêm toast mới
+    while (toastContainer.firstChild) {
+        toastContainer.removeChild(toastContainer.firstChild);
+    }
+
     const toast = document.createElement('div');
     toast.classList.add('toast');
     toast.textContent = message;
