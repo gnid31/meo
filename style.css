@@ -966,8 +966,17 @@ p {
   animation: scroll var(--scroll-duration) linear infinite;
 }
 #carousel-track:hover {
+  animation-play-state: running;
+}
+#song-buttons button.emoji-only:hover ~ #carousel-track.carousel-track-animate,
+#song-buttons button.emoji-only:focus ~ #carousel-track.carousel-track-animate {
   animation-play-state: paused;
 }
+#song-buttons button.emoji-only:hover,
+#song-buttons button.emoji-only:focus {
+  z-index: 2;
+}
+
 @keyframes scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(calc(-1 * var(--total-width))); }
