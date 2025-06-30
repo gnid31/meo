@@ -882,31 +882,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Hiệu ứng băng chuyền cho các nút nhạc
   (function setupCarousel() {
-    const track = document.getElementById('carousel-track');
-    const songButtons = document.getElementById('song-buttons');
-    if (!track || !songButtons) return;
+  const track = document.getElementById('carousel-track');
+  const songButtons = document.getElementById('song-buttons');
+  if (!track || !songButtons) return;
 
-    // Lặp lại các button để tạo hiệu ứng vô hạn
-    const buttonCount = songButtons.children.length;
-    for (let i = 0; i < buttonCount; i++) {
-      const clone = songButtons.children[i].cloneNode(true);
-      songButtons.appendChild(clone);
+  // Xóa các clone cũ nếu có
+  const clones = Array.from(songButtons.querySelectorAll('.carousel-clone'));
+  clones.forEach(clone => clone.remove());
+
+  // Clone tất cả button và gắn class để nhận diện
+  const buttonNodes = Array.from(songButtons.children);
+  buttonNodes.forEach(btn => {
+    const clone = btn.cloneNode(true);
+    clone.classList.add('carousel-clone');
+    songButtons.appendChild(clone);
+  });
+
+  // Tính tổng chiều rộng của tất cả button (gốc + clone)
+  const totalWidth = Array.from(songButtons.children).reduce((sum, btn) => sum + btn.offsetWidth + 12, 0); // 12 là gap
+  let pos = 0;
+  let animationId;
+
+  function animate() {
+    pos -= 0.6; // tốc độ
+    if (Math.abs(pos) >= totalWidth / 2) {
+      // Khi đã trượt hết nửa đầu, reset về 0 (không transition)
+      track.style.transition = 'none';
+      pos = 0;
+      track.style.transform = `translateX(${pos}px)`;
+      // Bắt buộc browser reflow để transition không bị áp dụng
+      void track.offsetWidth;
+      track.style.transition = 'none';
+    } else {
+      track.style.transition = 'none';
+      track.style.transform = `translateX(${pos}px)`;
     }
+    animationId = requestAnimationFrame(animate);
+  }
 
-    let pos = 0;
-    const speed = 0.6; // px mỗi frame
-    const buttonWidth = songButtons.children[0].offsetWidth + 12; // 12px gap
-    const totalWidth = buttonWidth * buttonCount;
-
-    function animate() {
-      pos += speed;
-      if (pos >= totalWidth) pos = 0;
-      track.style.transform = `translateX(${-pos}px)`;
-      // Hiệu ứng mờ dần khi ra mép (bằng mask đã có trong CSS)
-      requestAnimationFrame(animate);
-    }
-    animate();
-  })();
+  // Đặt chiều rộng cho track để không bị co lại
+  track.style.width = totalWidth + 'px';
+  pos = 0;
+  track.style.transform = `translateX(0px)`;
+  track.style.transition = 'none';
+  if (animationId) cancelAnimationFrame(animationId);
+  animationId = requestAnimationFrame(animate);
+})();
 });
 
 

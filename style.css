@@ -17,8 +17,8 @@ body {
 }
 
 .container {
-  background-color: rgba(255, 255, 255, 0.7);
-  padding: 20px 30px;
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 6px 20px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   text-align: center;
@@ -205,7 +205,7 @@ p {
   overflow: visible;
   min-height: 80px;
   height: auto;
-  padding: 10px;
+  padding: 0px;
   margin-top: 20px;
 }
 
