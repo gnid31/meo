@@ -53,19 +53,19 @@
       <div class="carousel-mask">
         <div id="carousel-track">
           <div id="song-buttons">
-            <button onclick="playSong(0)" class="emoji-only" data-label="Khoai Tây Chiên" data-index="8">🍟</button>
-            <button onclick="playSong(1)" class="emoji-only" data-label="Hamburger" data-index="20">🍔</button>
-            <button onclick="playSong(2)" class="emoji-only" data-label="Bỏng Ngô" data-index="7">🍿</button>
-            <button onclick="playSong(3)" class="emoji-only" data-label="Bánh Sinh Nhật" data-index="0">🎂</button>
-            <button onclick="playSong(4)" class="emoji-only" data-label="Mì Kay" data-index="13">🍜</button>
-            <button onclick="playSong(5)" class="emoji-only" data-label="Trà Sữa" data-index="6">🧋</button>
-            <button onclick="playSong(6)" class="emoji-only" data-label="Pizza" data-index="13">🍕</button>
-            <button onclick="playSong(7)" class="emoji-only" data-label="Rượu Vang" data-index="7">🍷</button>
-            <button onclick="playSong(8)" class="emoji-only" data-label="Bánh Trung Thu" data-index="8">🥮</button>
-            <button onclick="playSong(9)" class="emoji-only" data-label="Bánh Donut" data-index="20">🍩</button>
+            <button onclick="playSong(0)" class="emoji-only" data-label="Bún bò" data-index="8">🐮</button>
+            <button onclick="playSong(1)" class="emoji-only" data-label="Nem nướng" data-index="20">🍱</button>
+            <button onclick="playSong(2)" class="emoji-only" data-label="Popcorn" data-index="7">🍿</button>
+            <button onclick="playSong(3)" class="emoji-only" data-label="Bánh Bèo" data-index="0">🎂</button>
+            <button onclick="playSong(4)" class="emoji-only" data-label="Mì Ke" data-index="13">🍜</button>
+            <button onclick="playSong(5)" class="emoji-only" data-label="Trà sữa Bingxue" data-index="6">🧋</button>
+            <button onclick="playSong(6)" class="emoji-only" data-label="Beefsteak" data-index="13">🥩</button>
+            <button onclick="playSong(7)" class="emoji-only" data-label="Rosé wine" data-index="7">🍷</button>
+            <button onclick="playSong(8)" class="emoji-only" data-label="Moon Cake" data-index="8">🥮</button>
+            <button onclick="playSong(9)" class="emoji-only" data-label="Dookki" data-index="20">🫕</button>
             <button onclick="playSong(10)" class="emoji-only" data-label="Biaa.iu.oi" data-index="11">🍻</button>
-            <button onclick="playSong(11)" class="emoji-only" data-label="Kem Ốc Quế" data-index="0">🍦</button>
-            <button onclick="playSong(12)" class="emoji-only" data-label="Bánh Ngọt" data-index="12">🍰</button>
+            <button onclick="playSong(11)" class="emoji-only" data-label="Kem Tràng Tiền" data-index="0">🍦</button>
+            <button onclick="playSong(12)" class="emoji-only" data-label="Tiramisu" data-index="12">🍰</button>
           </div>
         </div>
       </div>
@@ -111,21 +111,23 @@
       <div class="input-group">
         <input type="text" id="username-input" placeholder="Full name" required>
       </div>
-      <div class="input-group">
-        <input type="password" id="password-input" placeholder="♌ Birthday (dd/mm/yy)" required>
+      <div class="signin-guide">Birthday (dd/mm/yy)</div>
+      <div class="input-group zodiac-group">
+        <span class="zodiac-icon">♌</span>
+        <input type="password" id="password-input" placeholder="Sư Tử Cuồng Nộ" required>
         <i class="fas fa-eye password-toggle" id="toggle-dob-password"></i>
-       
       </div>
-      <div class="input-group">
-        <input type="password" id="gnids-birthday-input" placeholder="♑ Birthday (dd/mm/yy)" required>
+      <div class="input-group zodiac-group">
+        <span class="zodiac-icon">♑</span>
+        <input type="password" id="gnids-birthday-input" placeholder="Sói Hoang Hư Hỏng" required>
         <i class="fas fa-eye password-toggle" id="toggle-gnid-password"></i>
-        
       </div>
-      <div class="input-group">
-        <input type="password" id="another-input" placeholder="♋ Birthday (dd/mm/yy)" required>
+      <div class="input-group zodiac-group">
+        <span class="zodiac-icon">♋</span>
+        <input type="password" id="another-input" placeholder="Cua Kì Cục" required>
         <i class="fas fa-eye password-toggle" id="toggle-another-password"></i>
       </div>
-      <button id="signin-button">Meo</button>
+      <button id="signin-button">👌Oki!</button>
       <div id="signin-error-message" class="error-message"></div>
     </div>
   </div>

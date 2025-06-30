@@ -972,3 +972,36 @@ p {
   0% { transform: translateX(0); }
   100% { transform: translateX(calc(-1 * var(--total-width))); }
 }
+
+.signin-guide {
+  color: #FF69B4;
+  font-size: 1em;
+  margin-bottom: 8px;
+  text-align: left;
+  margin-left: 15px;
+}
+
+.zodiac-group {
+  position: relative;
+}
+.zodiac-icon {
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2.1em;
+  color: #FF69B4;
+  pointer-events: none;
+  z-index: 2;
+  line-height: 1;
+  height: 1em;
+  display: flex;
+  align-items: center;
+  padding-bottom: 20px;
+}
+.zodiac-group input {
+  padding-left: 2.8em;
+  height: 48px;
+  box-sizing: border-box;
+  line-height: 1.2;
+}
