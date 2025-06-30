@@ -18,7 +18,7 @@ body {
 
 .container {
   background-color: rgba(255, 255, 255, 0.5);
-  padding: 6px 20px;
+  padding: 0px 20px;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   text-align: center;
@@ -203,18 +203,18 @@ p {
 #song-selector {
   position: relative;
   overflow: visible;
-  min-height: 80px;
+  min-height: 160px; /* tăng chiều cao để label phía trên emoji luôn hiển thị đủ */
   height: auto;
   padding: 0px;
-  margin-top: 20px;
+  margin-top: 32px;
 }
 
 .carousel-mask {
   width: 100%;
   max-width: 100vw;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  height: 60px;
+  height: 140px; /* tăng chiều cao để label không bị cắt phía trên */
   margin: 0 auto;
   border: none;
   padding: 0;
@@ -239,9 +239,11 @@ p {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 24px;
   margin-bottom: 0;
   padding: 0;
+  padding-top: 48px; /* vừa đủ để label phía trên emoji luôn hiển thị, emoji không bị đẩy xuống quá xa */
+  overflow: visible; /* Cho phép emoji phóng to không bị cắt */
   white-space: nowrap;
   transform: translate3d(0,0,0);
   -webkit-transform: translate3d(0,0,0);
@@ -266,18 +268,20 @@ p {
   transition: transform 0.2s ease, opacity 0.3s;
   min-width: 80px;
   opacity: 1;
+  position: relative;
 }
 
 #song-buttons button:hover {
   background-color: #e60073;
-  transform: scale(1.05);
+  transform: scale(1.5);
+  z-index: 2;
 }
 
 #song-buttons button.emoji-only {
   width: 60px;
   min-width: 60px;
   height: 60px;
-  font-size: 2.5em;
+  font-size: 3.5em;
   line-height: 60px;
   padding: 0;
   margin: 0;
@@ -288,7 +292,31 @@ p {
   background: none !important;
   border: none !important;
   box-shadow: none !important;
-  transition: none !important;
+}
+
+#song-buttons button::before {
+  content: attr(data-label);
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #FF1493;
+  font-size: 0.3em;
+  font-weight: bold;
+  padding: 0;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: 1002;
+  transition: opacity 0.22s, top 0.22s, visibility 0.22s;
+}
+
+#song-buttons button:hover::before,
+#song-buttons button:focus::before {
+  opacity: 1;
+  visibility: visible;
+  top: -44px;
 }
 
 @media (max-width: 600px) {
