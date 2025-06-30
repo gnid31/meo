@@ -216,18 +216,21 @@ p {
   position: relative;
   height: 60px;
   margin: 0 auto;
-  /* Hiệu ứng mask mờ hai bên */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  border: none;
+  padding: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
 }
 
 #carousel-track {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: 60px;
+  position: relative;
   will-change: transform;
-  transition: none;
+  transform: translateX(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  perspective: 1000;
+  -webkit-perspective: 1000;
 }
 
 #song-buttons {
@@ -239,9 +242,19 @@ p {
   gap: 12px;
   margin-bottom: 0;
   padding: 0;
+  white-space: nowrap;
+  transform: translate3d(0,0,0);
+  -webkit-transform: translate3d(0,0,0);
 }
 
 #song-buttons button {
+  flex-shrink: 0;
+  transform: translate3d(0,0,0);
+  -webkit-transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000;
+  -webkit-perspective: 1000;
   background-color: #FF69B4;
   color: white;
   border: none;
@@ -258,6 +271,24 @@ p {
 #song-buttons button:hover {
   background-color: #e60073;
   transform: scale(1.05);
+}
+
+#song-buttons button.emoji-only {
+  width: 60px;
+  min-width: 60px;
+  height: 60px;
+  font-size: 2.5em;
+  line-height: 60px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: none !important;
 }
 
 @media (max-width: 600px) {
@@ -865,4 +896,26 @@ p {
 .toast.hide {
     opacity: 0;
     transform: translateY(-150%);
+}
+
+@keyframes carousel-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-1 * var(--carousel-width)));
+  }
+}
+
+#carousel-track.carousel-track-animate {
+  display: flex;
+  gap: 12px;
+  animation: scroll var(--scroll-duration) linear infinite;
+}
+#carousel-track:hover {
+  animation-play-state: paused;
+}
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-1 * var(--total-width))); }
 }

@@ -721,7 +721,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   // Tự động chuyển sang BSOD sau 10 giây
                   setTimeout(() => {
                       handleBlackScreenInteraction();
-                  }, 10000); // 10000 milliseconds = 10 giây
+                  }, 1000); // 10000 milliseconds = 10 giây
               }
           } else {
               // Subsequent sign-in attempts
@@ -729,6 +729,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   signinScreen.classList.add('hidden'); // Hide sign-in screen
                   toggleSnowfall(false); // Dừng tuyết rơi khi ẩn màn hình đăng nhập
                   
+
                   // CHỈNH SỬA: Chuyển đến màn hình hộp bí ẩn (splash-screen)
                   splashScreen.style.display = 'flex'; // HIỂN THỊ MÀN HÌNH HỘP BÍ ẨN
                   splashScreen.classList.remove('hidden'); // Đảm bảo nó hiển thị đúng cách
@@ -882,52 +883,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Hiệu ứng băng chuyền cho các nút nhạc
   (function setupCarousel() {
-  const track = document.getElementById('carousel-track');
-  const songButtons = document.getElementById('song-buttons');
-  if (!track || !songButtons) return;
+    const track = document.getElementById('carousel-track');
+    const songButtons = document.getElementById('song-buttons');
+    if (!track || !songButtons) return;
 
-  // Xóa các clone cũ nếu có
-  const clones = Array.from(songButtons.querySelectorAll('.carousel-clone'));
-  clones.forEach(clone => clone.remove());
-
-  // Clone tất cả button và gắn class để nhận diện
-  const buttonNodes = Array.from(songButtons.children);
-  buttonNodes.forEach(btn => {
-    const clone = btn.cloneNode(true);
-    clone.classList.add('carousel-clone');
-    songButtons.appendChild(clone);
-  });
-
-  // Tính tổng chiều rộng của tất cả button (gốc + clone)
-  const totalWidth = Array.from(songButtons.children).reduce((sum, btn) => sum + btn.offsetWidth + 12, 0); // 12 là gap
-  let pos = 0;
-  let animationId;
-
-  function animate() {
-    pos -= 0.6; // tốc độ
-    if (Math.abs(pos) >= totalWidth / 2) {
-      // Khi đã trượt hết nửa đầu, reset về 0 (không transition)
-      track.style.transition = 'none';
-      pos = 0;
-      track.style.transform = `translateX(${pos}px)`;
-      // Bắt buộc browser reflow để transition không bị áp dụng
-      void track.offsetWidth;
-      track.style.transition = 'none';
-    } else {
-      track.style.transition = 'none';
-      track.style.transform = `translateX(${pos}px)`;
+    // Chỉ clone nếu chưa có clone
+    if (!songButtons.querySelector('.carousel-clone')) {
+      const buttons = Array.from(songButtons.children);
+      buttons.forEach(btn => {
+        const clone = btn.cloneNode(true);
+        clone.classList.add('carousel-clone');
+        songButtons.appendChild(clone);
+      });
     }
-    animationId = requestAnimationFrame(animate);
-  }
 
-  // Đặt chiều rộng cho track để không bị co lại
-  track.style.width = totalWidth + 'px';
-  pos = 0;
-  track.style.transform = `translateX(0px)`;
-  track.style.transition = 'none';
-  if (animationId) cancelAnimationFrame(animationId);
-  animationId = requestAnimationFrame(animate);
-})();
+    // Tính width 1 button + gap
+    const button = songButtons.querySelector('button');
+    if (!button) return;
+    const buttonWidth = button.offsetWidth;
+    const gap = parseInt(getComputedStyle(songButtons).gap) || 0;
+    const totalButtons = songButtons.children.length / 2; // chỉ tính dãy gốc
+
+    // Tổng width cho 1 dãy gốc
+    const totalWidth = (buttonWidth + gap) * totalButtons;
+    const duplicatedTotalWidth = totalWidth * 2;
+    const halfTotalWidth = duplicatedTotalWidth / 2;
+
+    // Set biến CSS cho keyframes
+    track.style.setProperty('--total-width', `${halfTotalWidth}px`);
+
+    // Tính duration dựa trên tổng width
+    const baseDuration = 40; // seconds
+    const baseWidth = 5000; // px
+    const scrollDuration = (halfTotalWidth / baseWidth) * baseDuration;
+    track.style.setProperty('--scroll-duration', `${scrollDuration}s`);
+
+    // Thêm class để kích hoạt animation
+    track.classList.add('carousel-track-animate');
+  })();
 });
 
 
