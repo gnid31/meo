@@ -242,7 +242,7 @@ p {
   gap: 32px; /* tăng khoảng cách giữa các emoji cho thoáng */
   margin-bottom: 0;
   padding: 0;
-  padding-top: 42px; /* giảm để emoji lên gần phía trên hơn */
+  padding-top: 46px; /* giảm để emoji lên gần phía trên hơn */
   padding-bottom: 60px; /* tăng không gian phía dưới cho số data-index */
   overflow: visible; /* Cho phép emoji phóng to không bị cắt */
   white-space: nowrap;
@@ -300,7 +300,7 @@ p {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: -48px;
+  bottom: -40px;
   color: #FF69B4;
   font-size: 0.4em;
   font-weight: bold;
@@ -316,7 +316,7 @@ p {
 #song-buttons button.emoji-only:focus::after {
   opacity: 1;
   visibility: visible;
-  bottom: -52px;
+  bottom: -44px;
 }
 
 #song-buttons button::before {
