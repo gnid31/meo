@@ -33,6 +33,7 @@ let lastLoginWasSuccessful = false;
 let loadingPercentageText;
 let toastContainer;
 let snowfallInterval = null;
+let preloadedBouncingImages = [];
 
 // Helper function to shuffle an array
 function shuffleArray(array) {
@@ -158,6 +159,109 @@ function toggleSnowfall(shouldStart, flakeInterval = 133) {
     }
 }
 
+function startFireworksEffect() {
+  if (fireworkInterval) {
+    clearInterval(fireworkInterval);
+  }
+
+  fireworkInterval = setInterval(() => {
+    if (shuffledSuccessScreenAssets.length === 0) {
+        shuffledSuccessScreenAssets = shuffleArray([...successScreenAssets]);
+        console.log('Shuffled success screen assets reloaded and reshuffled.');
+    }
+
+    if (shuffledSuccessScreenAssets.length === 0) {
+        console.warn('No success screen assets available after reshuffling.');
+        return;
+    }
+    const randomAsset = shuffledSuccessScreenAssets.shift();
+
+    let newElement;
+    let estimatedWidth, estimatedHeight;
+
+    const isImage = /\.(gif|jpe?g|png|webp)$/i.test(randomAsset);
+
+    if (isImage) {
+        newElement = document.createElement('img');
+        newElement.classList.add('firework-gif');
+        newElement.src = randomAsset;
+        estimatedWidth = 150;
+        estimatedHeight = 150;
+    } else {
+        newElement = document.createElement('div');
+        newElement.classList.add('success-bouncing-text');
+        newElement.textContent = randomAsset;
+        estimatedWidth = 300;
+        estimatedHeight = 70;
+    }
+
+    const position = findNonOverlappingPosition(estimatedWidth, estimatedHeight);
+
+    newElement.style.left = `${position.x}px`;
+    newElement.style.top = `${position.y}px`;
+
+    successScreensaver.appendChild(newElement);
+
+    const assetEntry = {
+        domElement: newElement,
+        rect: { x: position.x, y: position.y, width: estimatedWidth, height: estimatedHeight }
+    };
+    activeFireworkElements.push(assetEntry);
+
+    if (isImage) {
+        newElement.onload = () => {
+            assetEntry.rect.width = newElement.offsetWidth;
+            assetEntry.rect.height = newElement.offsetHeight;
+        };
+    } else {
+        setTimeout(() => {
+            assetEntry.rect.width = newElement.offsetWidth;
+            assetEntry.rect.height = newElement.offsetHeight;
+        }, 0);
+    }
+
+
+    const animationDurationMs = 6 * 1000;
+    setTimeout(() => {
+        newElement.remove();
+        const index = activeFireworkElements.indexOf(assetEntry);
+        if (index > -1) {
+            activeFireworkElements.splice(index, 1);
+        }
+    }, animationDurationMs);
+
+  }, 600);
+}
+
+function clearFireworks() {
+  if (successScreensaver) {
+    while (successScreensaver.querySelector('.success-bouncing-text')) {
+      successScreensaver.querySelector('.success-bouncing-text').remove();
+    }
+    while (successScreensaver.querySelector('.firework-gif')) {
+      successScreensaver.querySelector('.firework-gif').remove();
+    }
+  }
+}
+
+
+function changeBackgroundImage() {
+    if (wallpaperImageUrls.length === 0) {
+        console.warn('No wallpaper images loaded.');
+        return;
+    }
+    currentBackgroundIndex = (currentBackgroundIndex + 1) % wallpaperImageUrls.length;
+    body.style.backgroundImage = `url(${wallpaperImageUrls[currentBackgroundIndex]})`;
+}
+
+function startBackgroundChange() {
+    if (backgroundChangeInterval) {
+        clearInterval(backgroundChangeInterval);
+    }
+    changeBackgroundImage();
+    backgroundChangeInterval = setInterval(changeBackgroundImage, 5000);
+}
+
 const songList = [
   "https://github.com/gnid31/meo/raw/main/music/intentions.mp3", // meo 8
   "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 20
@@ -179,7 +283,7 @@ let screensaverKeyListener = null;
 function showScreensaver(songUrl) {
     screensaver.style.display = 'block';
     console.log('Song screensaver shown.');
-    console.log('Current bouncingImages array length:', bouncingImages.length);
+    console.log('Current preloadedBouncingImages array length:', preloadedBouncingImages.length);
 
     if (screensaverKeyListener) {
         window.removeEventListener('keydown', screensaverKeyListener);
@@ -228,9 +332,9 @@ function showScreensaver(songUrl) {
         };
     }
 
-    if (bouncingImg && bouncingImages.length > 0) {
-        const randomIndex = Math.floor(Math.random() * bouncingImages.length);
-        bouncingImg.src = bouncingImages[randomIndex].src;
+    if (bouncingImg && preloadedBouncingImages.length > 0) {
+        const randomIndex = Math.floor(Math.random() * preloadedBouncingImages.length);
+        bouncingImg.src = preloadedBouncingImages[randomIndex].src;
         console.log('Bouncing image src set to:', bouncingImg.src);
         bouncingImg.style.display = 'block';
         bouncingImg.style.position = 'absolute';
@@ -241,8 +345,8 @@ function showScreensaver(songUrl) {
 
         let currentX = Math.random() * (window.innerWidth - bouncingImg.offsetWidth);
         let currentY = Math.random() * (window.innerHeight - bouncingImg.offsetHeight);
-        let dx = 2
-        let dy = 1
+        let dx = 2;
+        let dy = 1;
 
         console.log('Initial bouncing image dimensions:', bouncingImg.offsetWidth, bouncingImg.offsetHeight);
 
@@ -270,12 +374,12 @@ function showScreensaver(songUrl) {
                 collided = true;
             }
 
-            if (collided && bouncingImages.length > 1) {
+            if (collided && preloadedBouncingImages.length > 1) {
                 let newImageSrc;
                 let attempts = 0;
                 do {
-                    const randomIndex = Math.floor(Math.random() * bouncingImages.length);
-                    newImageSrc = bouncingImages[randomIndex].src;
+                    const randomIndex = Math.floor(Math.random() * preloadedBouncingImages.length);
+                    newImageSrc = preloadedBouncingImages[randomIndex].src;
                     attempts++;
                     if (attempts > 100) {
                        console.warn('Không tìm thấy ảnh khác để thay đổi. Đang sử dụng lại ảnh cũ.');
@@ -294,7 +398,7 @@ function showScreensaver(songUrl) {
 
         }, 10);
     } else {
-        console.warn('bouncingImg hoặc bouncingImages chưa sẵn sàng cho màn hình chờ bài hát. Bỏ qua hoạt ảnh nhảy.');
+        console.warn('bouncingImg hoặc preloadedBouncingImages chưa sẵn sàng cho màn hình chờ bài hát. Bỏ qua hoạt ảnh nhảy.');
         if (bouncingImg) bouncingImg.style.display = 'none';
     }
 
@@ -339,6 +443,7 @@ function playSong(index) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log("DOMContentLoaded event fired.");
   // Gán các biến DOM element ở đây
   screensaver = document.getElementById("screensaver");
   bouncingImg = document.getElementById("bouncing-image");
@@ -633,7 +738,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Collect all individual asset promises
   const allAssetPromises = [
-    ...(await loadImages(updateLoadingProgress)),
     ...(await loadWallpaperImages(updateLoadingProgress)),
     ...(await loadSuccessScreenAssets(updateLoadingProgress))
   ];
@@ -921,147 +1025,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Thêm class để kích hoạt animation
     track.classList.add('carousel-track-animate');
   })();
+
+  await preloadBouncingImages(updateLoadingProgress); // Preload bouncing images early
 });
 
-
-const bouncingImages = [];
-
-async function loadImages(progressCallback) {
-  console.log('Bắt đầu tải danh sách ảnh bouncing...');
-  try {
-    const timestamp = new Date().getTime();
-    const response = await fetch(`https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/list.txt?t=${timestamp}`);
-    const text = await response.text();
-    const imageUrls = text.split('\n').filter(url => url.trim() !== '');
-    console.log('Số lượng URL ảnh bouncing đọc được từ list.txt:', imageUrls.length);
-
-    const promises = imageUrls.map(url => {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.src = url;
-        img.onload = () => {
-          bouncingImages.push(img);
-          if (progressCallback) progressCallback();
-          console.log('Đã tải thành công ảnh bouncing:', url);
-          resolve();
-        };
-        img.onerror = () => {
-          console.error(`Failed to load bouncing image: ${url}`);
-          if (progressCallback) progressCallback();
-          resolve();
-        };
-      });
-    });
-    console.log('Đã tạo Promises cho ảnh bouncing. Tổng số:', promises.length);
-    return promises;
-  } catch (error) {
-    console.error('Error loading bouncing image list:', error);
-    return [];
-  }
-}
-
-function startFireworksEffect() {
-  if (fireworkInterval) {
-    clearInterval(fireworkInterval);
-  }
-
-  fireworkInterval = setInterval(() => {
-    if (shuffledSuccessScreenAssets.length === 0) {
-        shuffledSuccessScreenAssets = shuffleArray([...successScreenAssets]);
-        console.log('Shuffled success screen assets reloaded and reshuffled.');
-    }
-
-    if (shuffledSuccessScreenAssets.length === 0) {
-        console.warn('No success screen assets available after reshuffling.');
-        return;
-    }
-    const randomAsset = shuffledSuccessScreenAssets.shift();
-
-    let newElement;
-    let estimatedWidth, estimatedHeight;
-
-    const isImage = /\.(gif|jpe?g|png|webp)$/i.test(randomAsset);
-
-    if (isImage) {
-        newElement = document.createElement('img');
-        newElement.classList.add('firework-gif');
-        newElement.src = randomAsset;
-        estimatedWidth = 150;
-        estimatedHeight = 150;
-    } else {
-        newElement = document.createElement('div');
-        newElement.classList.add('success-bouncing-text');
-        newElement.textContent = randomAsset;
-        estimatedWidth = 300;
-        estimatedHeight = 70;
-    }
-
-    const position = findNonOverlappingPosition(estimatedWidth, estimatedHeight);
-
-    newElement.style.left = `${position.x}px`;
-    newElement.style.top = `${position.y}px`;
-
-    successScreensaver.appendChild(newElement);
-
-    const assetEntry = {
-        domElement: newElement,
-        rect: { x: position.x, y: position.y, width: estimatedWidth, height: estimatedHeight }
-    };
-    activeFireworkElements.push(assetEntry);
-
-    if (isImage) {
-        newElement.onload = () => {
-            assetEntry.rect.width = newElement.offsetWidth;
-            assetEntry.rect.height = newElement.offsetHeight;
-        };
-    } else {
-        setTimeout(() => {
-            assetEntry.rect.width = newElement.offsetWidth;
-            assetEntry.rect.height = newElement.offsetHeight;
-        }, 0);
-    }
-
-
-    const animationDurationMs = 6 * 1000;
-    setTimeout(() => {
-        newElement.remove();
-        const index = activeFireworkElements.indexOf(assetEntry);
-        if (index > -1) {
-            activeFireworkElements.splice(index, 1);
-        }
-    }, animationDurationMs);
-
-  }, 600);
-}
-
-function clearFireworks() {
-  if (successScreensaver) {
-    while (successScreensaver.querySelector('.success-bouncing-text')) {
-      successScreensaver.querySelector('.success-bouncing-text').remove();
-    }
-    while (successScreensaver.querySelector('.firework-gif')) {
-      successScreensaver.querySelector('.firework-gif').remove();
-    }
-  }
-}
-
-
-function changeBackgroundImage() {
-    if (wallpaperImageUrls.length === 0) {
-        console.warn('No wallpaper images loaded.');
-        return;
-    }
-    currentBackgroundIndex = (currentBackgroundIndex + 1) % wallpaperImageUrls.length;
-    body.style.backgroundImage = `url(${wallpaperImageUrls[currentBackgroundIndex]})`;
-}
-
-function startBackgroundChange() {
-    if (backgroundChangeInterval) {
-        clearInterval(backgroundChangeInterval);
-    }
-    changeBackgroundImage();
-    backgroundChangeInterval = setInterval(changeBackgroundImage, 5000);
-}
 
 async function loadWallpaperImages(progressCallback) {
     try {
@@ -1265,4 +1232,47 @@ function showSongSelector() {
 function showFireworkScreen() {
   successScreensaver.style.display = 'block';
   toggleSnowfall(true); // Bật tuyết rơi khi vào firework
+}
+
+async function preloadBouncingImages(progressCallback) {
+    console.log("Preloading bouncing images...");
+    const listTxtUrl = 'https://raw.githubusercontent.com/gnid31/meo/main/list.txt';
+
+    try {
+        const listResponse = await fetch(listTxtUrl);
+        const listText = await listResponse.text();
+        const imageUrls = listText.split('\n').map(s => s.trim()).filter(s => s !== '');
+        const totalImages = imageUrls.length;
+        let loadedImages = 0;
+
+        const imagePromises = imageUrls.map(url => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = url;
+                img.onload = () => {
+                    loadedImages++;
+                    if (progressCallback) {
+                        progressCallback(loadedImages, totalImages, 'Preloading Bouncing Images');
+                    }
+                    resolve(img);
+                };
+                img.onerror = () => {
+                    console.error(`Failed to load image: ${url}`);
+                    loadedImages++;
+                    if (progressCallback) {
+                        progressCallback(loadedImages, totalImages, 'Preloading Bouncing Images');
+                    }
+                    resolve(null); // Resolve with null to not block if an image fails
+                };
+            });
+        });
+
+        preloadedBouncingImages = (await Promise.all(imagePromises)).filter(img => img !== null);
+        console.log(`Preloaded ${preloadedBouncingImages.length} bouncing images.`);
+        return preloadedBouncingImages;
+
+    } catch (error) {
+        console.error('Error preloading bouncing images:', error);
+        return [];
+    }
 }
