@@ -34,6 +34,7 @@ let loadingPercentageText;
 let toastContainer;
 let snowfallInterval = null;
 let preloadedBouncingImages = [];
+let exitHintElement;
 
 // Helper function to shuffle an array
 function shuffleArray(array) {
@@ -280,9 +281,15 @@ const songList = [
 
 let screensaverKeyListener = null;
 
-function showScreensaver(songUrl) {
+function showScreensaver(songUrl, customMessage) {
     screensaver.style.display = 'block';
     console.log('Song screensaver shown.');
+
+    // Update the exit hint text
+    if (exitHintElement) {
+        exitHintElement.textContent = customMessage;
+    }
+
     console.log('Current preloadedBouncingImages array length:', preloadedBouncingImages.length);
 
     if (screensaverKeyListener) {
@@ -437,9 +444,10 @@ function showScreensaver(songUrl) {
     window.addEventListener('keydown', screensaverKeyListener);
 }
 
-function playSong(index) {
+function playSong(buttonElement, index) {
   const songUrl = songList[index];
-  showScreensaver(songUrl);
+  const customMessage = buttonElement.getAttribute('data-message');
+  showScreensaver(songUrl, customMessage);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -447,6 +455,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Gán các biến DOM element ở đây
   screensaver = document.getElementById("screensaver");
   bouncingImg = document.getElementById("bouncing-image");
+  exitHintElement = document.getElementById("exit-hint");
   splashScreen = document.getElementById('splash-screen');
   claimButton = document.getElementById('claim-button');
   audio = document.getElementById('myAudio');
