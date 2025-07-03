@@ -798,7 +798,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Sign-in logic
   if (signinButton && usernameInput && passwordInput && gnidsBirthdayInput && signinErrorMessage && splashScreen && anotherInput) {
-      const correctUsername = 'Kim Thuý Hằng';
+      const correctUsername = ['Kim Thuý Hằng', 'Kim Thúy Hằng'];
       const correctPassword = '08/08/2004';
       const correctGnidsBirthday = '03/01/2004';
       const correctAnotherField1 = '10/07/2004';
@@ -806,7 +806,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const handleSignIn = () => {
           // Determine if login was successful
-          lastLoginWasSuccessful = (usernameInput.value === correctUsername &&
+          lastLoginWasSuccessful = (correctUsername.includes(usernameInput.value) &&
                                   passwordInput.value === correctPassword &&
                                   gnidsBirthdayInput.value === correctGnidsBirthday &&
                                   (anotherInput.value === correctAnotherField1 || anotherInput.value === correctAnotherField2));
@@ -838,7 +838,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               }
           } else {
               // Subsequent sign-in attempts
-              if (lastLoginWasSuccessful) {
+              if (correctUsername.includes(usernameInput.value) && lastLoginWasSuccessful) {
                   signinScreen.classList.add('hidden'); // Hide sign-in screen
                   toggleSnowfall(false); // Dừng tuyết rơi khi ẩn màn hình đăng nhập
                   
