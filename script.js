@@ -159,16 +159,16 @@ function toggleSnowfall(shouldStart, flakeInterval = 133) {
 }
 
 const songList = [
-  "https://github.com/gnid31/meo/raw/main/music/id_072019.mp3", // meo 8
+  "https://github.com/gnid31/meo/raw/main/music/intentions.mp3", // meo 8
   "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 20
-  "https://github.com/gnid31/meo/raw/main/music/hen_mot_mai.mp3", // meo 7
+  "https://github.com/gnid31/meo/raw/main/music/haru_haru.mp3", // meo 7
   "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3", // meo 0
   "https://github.com/gnid31/meo/raw/main/music/neu_ngay_ay.mp3", // meo 13 (old)
-  "https://github.com/gnid31/meo/raw/main/music/gia_nhu_em_nhin_lai.mp3", // meo 6 (old)
+  "https://github.com/gnid31/meo/raw/main/music/giac_mo_tung_rat_tho.mp3", // meo 6 (old)
   "https://github.com/gnid31/meo/raw/main/music/nothing_gonna_change_my_love_for_you.mp3", // meo 1 (new)
   "https://github.com/gnid31/meo/raw/main/music/hon_ca_yeu.mp3", // meo 3 (new)
   "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3", // meo 3 (new)
-  "https://github.com/gnid31/meo/raw/main/music/u_co_anh_day.mp3", // meo 9 (new)
+  "https://github.com/gnid31/meo/raw/main/music/until_i_found_you.mp3", // meo 9 (new)
   "https://github.com/gnid31/meo/raw/main/music/lac_nhau_co_phai_muon_doi.mp3", // meo 5 (new)
   "https://github.com/gnid31/meo/raw/main/music/anh_nang_cua_anh.mp3", // meo 4 (new)
   "https://github.com/gnid31/meo/raw/main/music/my_everything.mp3", // meo 2 (new)
