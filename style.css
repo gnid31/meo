@@ -1,3 +1,61 @@
+/* Fade-out-backward animation for envelope */
+@keyframes fade-in-bck {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92) translateZ(-80px);
+  }
+}
+
+#envelope-image.fade-in-bck {
+  animation: fade-in-bck 5s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Envelope hover effect */
+#envelope-image {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+  cursor: pointer;
+}
+#envelope-image:hover {
+  /* Only apply effect if hovered directly, not via children */
+  transform: scale(1.08) rotate(-8deg);
+  filter: brightness(1.08) drop-shadow(0 0 8px #fff3);
+  box-shadow: none;
+  outline: none;
+}
+#envelope-image:active,
+#envelope-image:focus {
+  /* Optional: keep effect for accessibility */
+  transform: scale(1.08) rotate(-8deg);
+  filter: brightness(1.08) drop-shadow(0 0 8px #fff3);
+  box-shadow: none;
+  outline: none;
+}
+
+/* Prevent parent hover from triggering effect on children */
+#envelope-image *:hover {
+  transform: none !important;
+  filter: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Fade-in-forward animation for letter */
+@keyframes fade-in-fwd {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+#letter-image.fade-in-fwd {
+  animation: fade-in-fwd 5s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #FFC0CB;
@@ -1013,4 +1071,68 @@ p {
   height: 48px;
   box-sizing: border-box;
   line-height: 1.2;
+}
+
+/* NEW CSS for Letter Screen */
+#letter-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #FFC0CB; /* Or any background you prefer */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 9997;
+  overflow: hidden;
+}
+
+#envelope-image {
+  width: 900px; /* Increased to 3 times */
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.5s ease-in-out;
+}
+
+#letter-image {
+  width: auto; /* Maintain intrinsic width */
+  height: auto; /* Maintain intrinsic height */
+  max-width: 100vw; /* Make it as wide as the viewport */
+  max-height: 100vh; /* Make it as tall as the viewport */
+  object-fit: contain; /* Ensures aspect ratio is maintained within bounds */
+  opacity: 0;
+  transition: opacity 1.5s ease-out;
+  display: none; /* Hidden by default */
+  z-index: 2; /* Ensure it's above the envelope */
+}
+
+#letter-image.fade-in-grow {
+  opacity: 1;
+  /* Ensure no transform properties here */
+}
+
+#letter-image.visible {
+  opacity: 1;
+}
+
+#letter-screen-exit-hint {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px black;
+  z-index: 100001;
+  animation: fadeInOut 3s infinite; /* Apply the new fade in/out animation */
+}
+
+/* NEW: Fade In Out animation */
+@keyframes fadeInOut {
+  0%   { opacity: 0; }
+  50%  { opacity: 1; }
+  100% { opacity: 0; }
 }

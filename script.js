@@ -36,6 +36,77 @@ let snowfallInterval = null;
 let preloadedBouncingImages = [];
 let exitHintElement;
 
+// NEW: Consolidated function definitions (moved to global scope)
+function showSplashScreen() {
+  splashScreen.style.display = 'flex';
+  splashScreen.classList.remove('hidden');
+  questionBox.style.display = 'none';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào splash
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}
+
+function showQuestionBox() {
+  questionBox.style.display = 'block';
+  splashScreen.classList.add('hidden');
+  splashScreen.style.display = 'none';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào question-box
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}
+
+function showSongSelector() {
+  document.querySelector('.container').style.display = 'block';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào song-selector
+  // NEW: Ensure main background music plays when entering song selector screen
+  if (mainBackgroundMusic && mainBackgroundMusic.paused) {
+      mainBackgroundMusic.play().catch(error => {
+          console.error('Error playing main background music when showing song selector:', error);
+      });
+  }
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}
+
+function showFireworkScreen() {
+  successScreensaver.style.display = 'block';
+  toggleSnowfall(true); // Bật tuyết rơi khi vào firework
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}
+
+// NEW: Letter Screen elements
+let letterScreen;
+let envelopeImage;
+let letterImage;
+let letterScreenExitHint;
+let letterScreenMusic;
+
+// Function to open the envelope (moved to global scope for proper initialization)
+function openEnvelope() {
+  // envelopeImage.classList.add('opened'); // REMOVED: This was conflicting with fade-in-bck
+  // Start fade-out-backward animation for envelope
+  envelopeImage.classList.add('fade-in-bck');
+  envelopeImage.removeEventListener('click', openEnvelope);
+  // Wait for fade-out to finish, then show letter
+  setTimeout(() => {
+    envelopeImage.style.display = 'none';
+    envelopeImage.classList.remove('fade-in-bck');
+    letterImage.style.display = 'block';
+    letterImage.classList.remove('fade-in-grow', 'visible', 'fade-in-fwd');
+    void letterImage.offsetWidth;
+    letterImage.classList.add('fade-in-fwd');
+    letterImage.classList.add('visible'); // Add the 'visible' class here
+    // Show exit hint only when letter is visible
+    if (letterScreenExitHint) letterScreenExitHint.style.display = 'block';
+  }, 2000); // Changed from 700 to 5000 to match CSS animation duration
+  console.log('Envelope fade-out, letter will fade-in.');
+};
+
 // Helper function to shuffle an array
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -303,17 +374,17 @@ function showScreensaver(songUrl, customMessage) {
         console.log('Main background music stopped for individual song screensaver.');
     }
 
-    if (myAudio) {
-        myAudio.src = songUrl;
-        myAudio.load();
-        myAudio.play().then(() => {
+    if (audio) {
+        audio.src = songUrl;
+        audio.load();
+        audio.play().then(() => {
             console.log('Individual song started playing successfully.');
         }).catch(error => {
             console.error('Error playing individual song:', error);
         });
 
-        myAudio.onended = () => {
-            console.log('Individual song ended. Exiting screensaver...');
+        audio.onended = () => {
+            console.log('Individual song ended. Exiting screensaver and showing letter screen...');
             screensaver.style.display = 'none';
 
             if (bouncingImageAnimation) {
@@ -326,16 +397,14 @@ function showScreensaver(songUrl, customMessage) {
             }
 
             if (mainBackgroundMusic) {
-                console.log('Attempting to play main background music after song ended.');
-                mainBackgroundMusic.play().catch(error => {
-                    console.error('Error playing main background music after song ended:', error);
-                });
+                mainBackgroundMusic.pause(); // Pause main music to play letter screen music
             }
             if (screensaverKeyListener) {
                 window.removeEventListener('keydown', screensaverKeyListener);
                 screensaverKeyListener = null;
             }
-            myAudio.onended = null;
+            audio.onended = null; // Clear the onended handler to prevent re-triggering
+            showLetterScreen(); // NEW: Transition to the letter screen
         };
     }
 
@@ -438,10 +507,14 @@ function showScreensaver(songUrl, customMessage) {
             }
             window.removeEventListener('keydown', screensaverKeyListener);
             screensaverKeyListener = null;
+            showLetterScreen(); // NEW: Transition to the letter screen when key is pressed to exit
         }
     };
 
     window.addEventListener('keydown', screensaverKeyListener);
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
 }
 
 function playSong(buttonElement, index) {
@@ -449,6 +522,39 @@ function playSong(buttonElement, index) {
   const customMessage = buttonElement.getAttribute('data-message');
   showScreensaver(songUrl, customMessage);
 }
+
+// NEW: Function to show the letter screen (moved to global scope)
+function showLetterScreen() {
+  letterScreen.style.display = 'flex';
+  toggleSnowfall(true); // Start snowfall on letter screen
+  if (letterScreenMusic) {
+    letterScreenMusic.currentTime = 0;
+    letterScreenMusic.play().catch(error => {
+      console.error('Error playing letter screen music:', error);
+    });
+  }
+  // NEW: Pause main background music if it's playing
+  if (mainBackgroundMusic && !mainBackgroundMusic.paused) {
+      mainBackgroundMusic.pause();
+  }
+  console.log('Letter screen shown.');
+
+  // Reset envelope/letter state
+  envelopeImage.classList.remove('opened');
+  envelopeImage.style.opacity = '1';
+  envelopeImage.style.display = 'block';
+  letterImage.classList.remove('visible', 'fade-in-fwd', 'fade-in-grow');
+  letterImage.style.display = 'none';
+  if (letterScreenExitHint) letterScreenExitHint.style.display = 'none';
+
+  // Re-add click listener to envelope every time the screen is shown
+  envelopeImage.removeEventListener('click', openEnvelope);
+  envelopeImage.addEventListener('click', openEnvelope);
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}
+
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log("DOMContentLoaded event fired.");
@@ -489,6 +595,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   bsodScreen = document.getElementById('bsod-screen');
   bsodImage = document.getElementById('bsod-image');
 
+  // NEW: Initialize Letter Screen elements
+  letterScreen = document.getElementById('letter-screen');
+  envelopeImage = document.getElementById('envelope-image');
+  letterImage = document.getElementById('letter-image');
+  letterScreenExitHint = document.getElementById('letter-screen-exit-hint');
+  letterScreenMusic = document.getElementById('letter-screen-music');
+
+  // NEW: Listener for Letter Screen exit
+  letterScreenKeyListener = (e) => {
+    if (letterScreen.style.display === 'flex' && letterImage.classList.contains('visible') && e.key !== ' ') {
+      e.preventDefault(); // Prevent default if it's a key we're handling
+      letterScreen.style.display = 'none';
+      toggleSnowfall(false);
+      if (letterScreenMusic) {
+        letterScreenMusic.pause();
+        letterScreenMusic.currentTime = 0;
+      }
+      // Hide letter and reset for next time
+      letterImage.style.display = 'none';
+      letterImage.classList.remove('visible', 'fade-in-fwd', 'fade-in-grow');
+      envelopeImage.style.display = 'block';
+      if (letterScreenExitHint) letterScreenExitHint.style.display = 'none';
+      // Call showSongSelector to handle showing the container and resuming main music
+      showSongSelector();
+      console.log('Exited letter screen and returned to main.');
+    }
+  };
+  window.addEventListener('keydown', letterScreenKeyListener);
+
   // Ensure bouncing image is hidden initially
   if (bouncingImg) {
       bouncingImg.style.display = 'none';
@@ -505,9 +640,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       const volumeChange = e.deltaY > 0 ? -0.05 : 0.05;
 
-      if (myAudio && !myAudio.paused) {
-          myAudio.volume = Math.max(0, Math.min(1, myAudio.volume + volumeChange));
-          console.log('Individual song volume changed to:', myAudio.volume);
+      if (audio && !audio.paused) {
+          audio.volume = Math.max(0, Math.min(1, audio.volume + volumeChange));
+          console.log('Individual song volume changed to:', audio.volume);
       } else if (fireworksMusic && !fireworksMusic.paused) {
           fireworksMusic.volume = Math.max(0, Math.min(1, fireworksMusic.volume + volumeChange));
           console.log('Fireworks music volume changed to:', fireworksMusic.volume);
@@ -517,8 +652,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
   };
 
-  // Attach the global volume listener
+  // Attach the global volume listener for main screens
   window.addEventListener('wheel', handleVolumeAdjustment, { passive: false });
+
+  // Volume control: if letter screen is open, always control its music
+  window.addEventListener('wheel', function(e) {
+    if (letterScreen && letterScreen.style.display !== 'none' && letterScreenMusic) {
+      e.preventDefault();
+      const volumeChange = e.deltaY > 0 ? -0.05 : 0.05;
+      letterScreenMusic.volume = Math.max(0, Math.min(1, letterScreenMusic.volume + volumeChange));
+      console.log('Letter screen music volume changed to:', letterScreenMusic.volume);
+    }
+  }, { passive: false });
 
   // Logic tải tài nguyên và cập nhật tiến độ
   let totalAssetsToLoad = 0;
@@ -585,6 +730,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }, 100);
 
+      if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+      }
+
     } else {
       attemptsLeft--;
       answerInput.disabled = true;
@@ -625,6 +774,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Main background music stopped due to slaps sound.');
         }
         lockedScreen.style.display = 'flex';
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
       } else {
         errorMessage.textContent = 'Sai rồi, lêu lêu!';
         attemptsMessage.textContent = `Còn ${attemptsLeft} lần nhập thôi nha!`;
@@ -703,6 +855,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.error('Error playing main background music after F5 reset:', error);
             });
         }
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
       } else if (successScreensaver && successScreensaver.style.display === 'block' && allowExitSuccessScreen) {
         successScreensaver.style.display = 'none';
         if (fireworkInterval) {
@@ -718,6 +873,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             mainBackgroundMusic.play().catch(error => {
                 console.error('Error playing main background music on success screen exit:', error);
             });
+        }
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
         }
       }
     });
@@ -740,6 +898,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   totalAssetsToLoad += listText.split('\n').filter(url => url.trim() !== '').length;
   totalAssetsToLoad += wallpaperText.split('\n').filter(url => url.trim() !== '').length;
   totalAssetsToLoad += assetsText.split('\n').map(asset => asset.trim()).filter(asset => asset !== '').length;
+  
+  // NEW: Add letter screen assets to totalAssetsToLoad
+  totalAssetsToLoad += 2; // For envelope.png and letter.png
 
   if (totalAssetsToLoad === 0) {
       totalAssetsToLoad = 1;
@@ -748,7 +909,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Collect all individual asset promises
   const allAssetPromises = [
     ...(await loadWallpaperImages(updateLoadingProgress)),
-    ...(await loadSuccessScreenAssets(updateLoadingProgress))
+    ...(await loadSuccessScreenAssets(updateLoadingProgress)),
+    ...(await preloadBouncingImages(updateLoadingProgress)) // NEW: Ensure bouncing images are preloaded
   ];
 
   // Wait for all individual assets to load
@@ -779,12 +941,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         signinScreen.style.display = 'flex';
         usernameInput.focus(); // Focus on username input
         toggleSnowfall(true); // Bắt đầu tuyết rơi trên màn hình đăng nhập
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        }
     }
     
     // Ensure blackScreen, bsodScreen and splashScreen are hidden initially
     if (blackScreen) { blackScreen.style.display = 'none'; }
     if (bsodScreen) { bsodScreen.style.display = 'none'; }
     if (splashScreen) { splashScreen.style.display = 'none'; } // Ensure splashScreen is hidden
+    if (letterScreen) { letterScreen.style.display = 'none'; } // NEW: Ensure letterScreen is hidden
   }, 300); // 300ms delay
 
   console.log('Hoàn thành tải ảnh');
@@ -859,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   }
               } else {
                   // If login unsuccessful, stay on sign-in screen and show error
-                  showToast('Khéo khéo'); // Gọi showToast mỗi lần đăng nhập sai
+                  showToast('khéo khéo', 1000); // Gọi showToast mỗi lần đăng nhập sai
 
                   setupPasswordToggle(passwordInput, toggleDobPassword);
                   setupPasswordToggle(gnidsBirthdayInput, toggleGnidPassword);
@@ -933,7 +1099,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listener to exit BSOD screen
   window.addEventListener('keydown', (e) => {
-      if (bsodScreen.style.display === 'flex' && (e.key === 'Escape' || e.key === 'F5')) {
+      const allowedKeys = ['I', 'U', 'H', 'A', 'N', 'G'];
+      if (bsodScreen.style.display === 'flex' && allowedKeys.includes(e.key.toUpperCase())) {
           e.preventDefault();
           bsodScreen.style.display = 'none';
           
@@ -980,18 +1147,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Add event listeners for the BSOD screen to return to sign-in or mystery box
   if (bsodScreen) {
       document.addEventListener('keydown', (event) => {
+          const allowedKeysForBSODExit = ['I', 'U', 'H', 'A', 'N', 'G'];
           if (bsodScreen.style.display === 'flex') {
-              if (event.key === 'Enter' || event.key === 'Escape' || event.key === 'F5') { // Sửa: Esc/F5 cũng gọi handleBSODInteraction
+              if (allowedKeysForBSODExit.includes(event.key.toUpperCase())) {
                   event.preventDefault();
                   handleBSODInteraction();
-                  console.log('Phím Enter/Esc/F5 được nhấn trên màn hình BSOD.');
+                  console.log('Phím I, U, H, A, N, G được nhấn trên màn hình BSOD.');
               } else if (event.key === 'F11') {
                   event.preventDefault(); // Ngăn chặn hành vi mặc định của phím (nếu có)
+                  console.log(`Phím ${event.key} bị ngăn chặn trên màn hình BSOD.`);
+              } else if (!allowedKeysForBSODExit.includes(event.key.toUpperCase())) {
+                  event.preventDefault(); // Prevent any other key from doing anything
                   console.log(`Phím ${event.key} bị ngăn chặn trên màn hình BSOD.`);
               }
           }
       });
-      console.log('Đã cập nhật listeners cho màn hình BSOD để chỉ thoát bằng Enter/Esc/F5.');
+      console.log('Đã cập nhật listeners cho màn hình BSOD để chỉ thoát bằng I, U, H, A, N, G.');
   }
 
   // Hiệu ứng băng chuyền cho các nút nhạc
@@ -1035,9 +1206,51 @@ document.addEventListener('DOMContentLoaded', async () => {
     track.classList.add('carousel-track-animate');
   })();
 
-  await preloadBouncingImages(updateLoadingProgress); // Preload bouncing images early
-});
+  // ...existing code...
 
+  async function preloadBouncingImages(progressCallback) {
+    console.log("Preloading bouncing images...");
+    const listTxtUrl = 'https://raw.githubusercontent.com/gnid31/meo/main/list.txt';
+
+    try {
+        const listResponse = await fetch(listTxtUrl);
+        const listText = await listResponse.text();
+        const imageUrls = listText.split('\n').map(s => s.trim()).filter(s => s !== '');
+        const totalImages = imageUrls.length;
+        let loadedImages = 0;
+
+        const imagePromises = imageUrls.map(url => {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = url;
+                img.onload = () => {
+                    loadedImages++;
+                    if (progressCallback) {
+                        progressCallback(loadedImages, totalImages, 'Preloading Bouncing Images');
+                    }
+                    resolve(img);
+                };
+                img.onerror = () => {
+                    console.error(`Failed to load image: ${url}`);
+                    loadedImages++;
+                    if (progressCallback) {
+                        progressCallback(loadedImages, totalImages, 'Preloading Bouncing Images');
+                    }
+                    resolve(null); // Resolve with null to not block if an image fails
+                };
+            });
+        });
+
+        preloadedBouncingImages = (await Promise.all(imagePromises)).filter(img => img !== null);
+        console.log(`Preloaded ${preloadedBouncingImages.length} bouncing images.`);
+        return preloadedBouncingImages;
+
+    } catch (error) {
+        console.error('Error preloading bouncing images:', error);
+        return [];
+    }
+}
+});
 
 async function loadWallpaperImages(progressCallback) {
     try {
@@ -1147,6 +1360,9 @@ function handleBSODInteraction() {
         splashScreen.classList.remove('hidden');
         questionBox.style.display = 'none'; // Đảm bảo hộp câu hỏi bị ẩn
         toggleSnowfall(true); // Bật tuyết rơi khi vào splash
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
 
         console.log('Sau BSOD: Đăng nhập đúng, chuyển đến màn hình hộp bí ẩn.');
         if (mainBackgroundMusic) { 
@@ -1166,6 +1382,9 @@ function handleBSODInteraction() {
         questionBox.style.display = 'none';
         console.log('Sau BSOD: Đăng nhập sai, quay lại màn hình đăng nhập.');
         toggleSnowfall(true);
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
         if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
             mainBackgroundMusic.play().then(() => {
                 mainMusicStartedOnSignInScreen = true;
@@ -1216,72 +1435,4 @@ function showToast(message, duration = 3000) {
         setTimeout(removeToastHandler, transitionDurationMs + buffer);
 
     }, duration);
-}
-
-// Các hàm hiển thị màn hình mới
-function showSplashScreen() {
-  splashScreen.style.display = 'flex';
-  splashScreen.classList.remove('hidden');
-  questionBox.style.display = 'none';
-  toggleSnowfall(true); // Bật tuyết rơi khi vào splash
-}
-
-function showQuestionBox() {
-  questionBox.style.display = 'block';
-  splashScreen.classList.add('hidden');
-  splashScreen.style.display = 'none';
-  toggleSnowfall(true); // Bật tuyết rơi khi vào question-box
-}
-
-function showSongSelector() {
-  document.querySelector('.container').style.display = 'block';
-  toggleSnowfall(true); // Bật tuyết rơi khi vào song-selector
-}
-
-function showFireworkScreen() {
-  successScreensaver.style.display = 'block';
-  toggleSnowfall(true); // Bật tuyết rơi khi vào firework
-}
-
-async function preloadBouncingImages(progressCallback) {
-    console.log("Preloading bouncing images...");
-    const listTxtUrl = 'https://raw.githubusercontent.com/gnid31/meo/main/list.txt';
-
-    try {
-        const listResponse = await fetch(listTxtUrl);
-        const listText = await listResponse.text();
-        const imageUrls = listText.split('\n').map(s => s.trim()).filter(s => s !== '');
-        const totalImages = imageUrls.length;
-        let loadedImages = 0;
-
-        const imagePromises = imageUrls.map(url => {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.src = url;
-                img.onload = () => {
-                    loadedImages++;
-                    if (progressCallback) {
-                        progressCallback(loadedImages, totalImages, 'Preloading Bouncing Images');
-                    }
-                    resolve(img);
-                };
-                img.onerror = () => {
-                    console.error(`Failed to load image: ${url}`);
-                    loadedImages++;
-                    if (progressCallback) {
-                        progressCallback(loadedImages, totalImages, 'Preloading Bouncing Images');
-                    }
-                    resolve(null); // Resolve with null to not block if an image fails
-                };
-            });
-        });
-
-        preloadedBouncingImages = (await Promise.all(imagePromises)).filter(img => img !== null);
-        console.log(`Preloaded ${preloadedBouncingImages.length} bouncing images.`);
-        return preloadedBouncingImages;
-
-    } catch (error) {
-        console.error('Error preloading bouncing images:', error);
-        return [];
-    }
 }
