@@ -80,7 +80,8 @@ function showSongSelector() {
   }
   toggleSnowfall(true); // Bật tuyết rơi khi vào song-selector
   // NEW: Ensure main background music plays when entering song selector screen
-  if (mainBackgroundMusic && mainBackgroundMusic.paused) {
+  // Sửa: Chỉ phát nhạc nền nếu không có bài hát nào đang phát (audio.paused)
+  if (mainBackgroundMusic && mainBackgroundMusic.paused && (!audio || audio.paused)) {
       mainBackgroundMusic.play().catch(error => {
           console.error('Error playing main background music when showing song selector:', error);
       });
@@ -356,20 +357,19 @@ function startBackgroundChange() {
 }
 
 const songList = [
-  "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3", // meo 1
-  "https://github.com/gnid31/meo/raw/main/music/haru_haru.mp3", // meo 8
-  "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3", // meo 3 (new)
-  "https://github.com/gnid31/meo/raw/main/music/until_i_found_you.mp3", // meo 9 (new)
-  "https://github.com/gnid31/meo/raw/main/music/long_time_no_see.mp3", // meo 5 (new)
-  "https://github.com/gnid31/meo/raw/main/music/anh_nang_cua_anh.mp3", // meo 4 (new)
-  "https://github.com/gnid31/meo/raw/main/music/my_everything.mp3", // meo 2 (new)
+  "https://github.com/gnid31/meo/raw/main/music/intentions.mp3", // meo 1
+  "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 8
+  "https://github.com/gnid31/meo/raw/main/music/haru_haru.mp3", // meo 3 (new)
+  "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3", // meo 9 (new)
+  "https://github.com/gnid31/meo/raw/main/music/neu_biet_do_la_lan_cuoi.mp3", // meo 5 (new)
+  "https://github.com/gnid31/meo/raw/main/music/giac_mo_tung_rat_tho.mp3", // meo 4 (new)
+  "https://github.com/gnid31/meo/raw/main/music/nothing_gonna_change_my_love_for_you.mp3", // meo 2 (new)
   "https://github.com/gnid31/meo/raw/main/music/hen_mot_mai.mp3", // meo 7 (new)
-  "https://github.com/gnid31/meo/raw/main/music/u_co_anh_day.mp3", // meo 10 (new)
-  "https://github.com/gnid31/meo/raw/main/music/giac_mo_tung_rat_tho.mp3", // meo 6 (new)
-  "https://github.com/gnid31/meo/raw/main/music/neu_biet_do_la_lan_cuoi.mp3", // meo 11 (new)
-  "https://github.com/gnid31/meo/raw/main/music/hon_ca_yeu.mp3", // meo 12 (new)
-  "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 13 (new)
-  "https://github.com/gnid31/meo/raw/main/music/gia_nhu_em_nhin_lai.mp3", // meo 14 (new)
+  "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3", // meo 10 (new)
+  "https://github.com/gnid31/meo/raw/main/music/until_i_found_you.mp3", // meo 6 (new)
+  "https://github.com/gnid31/meo/raw/main/music/long_time_no_see.mp3", // meo 11 (new)
+  "https://github.com/gnid31/meo/raw/main/music/anh_nang_cua_anh.mp3", // meo 12 (new)
+  "https://github.com/gnid31/meo/raw/main/music/my_everything.mp3", // meo 12 (new)
 ];
 totalSongs = songList.length; // NEW: Initialize totalSongs here
 
@@ -407,7 +407,7 @@ function showScreensaver(songUrl, customMessage) {
         });
 
         audio.onended = () => {
-            console.log('Individual song ended. Exiting screensaver and showing letter screen...');
+            console.log('Individual song ended. Exiting screensaver...');
             screensaver.style.display = 'none';
 
             if (bouncingImageAnimation) {
@@ -427,7 +427,10 @@ function showScreensaver(songUrl, customMessage) {
                 screensaverKeyListener = null;
             }
             audio.onended = null; // Clear the onended handler to prevent re-triggering
-            showLetterScreen(); // NEW: Transition to the letter screen
+            // Chỉ chuyển sang màn hình thư nếu đã nghe hết hoặc nghe bài i_love_you.mp3
+            if (songUrl === "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3" || listenedSongs.size === totalSongs) {
+                showLetterScreen();
+            }
         };
     }
 
@@ -530,7 +533,10 @@ function showScreensaver(songUrl, customMessage) {
             }
             window.removeEventListener('keydown', screensaverKeyListener);
             screensaverKeyListener = null;
-            showLetterScreen(); // NEW: Transition to the letter screen when key is pressed to exit
+            // Chỉ chuyển sang màn hình thư nếu đã nghe hết hoặc nghe bài i_love_you.mp3
+            if (songUrl === "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3" || listenedSongs.size === totalSongs) {
+                showLetterScreen();
+            }
         }
     };
 
@@ -546,23 +552,25 @@ function playSong(buttonElement, index) {
 
   listenedSongs.add(index); // Mark this song as listened
 
-  showScreensaver(songUrl, customMessage);
-
-  // Check if all songs have been listened to OR if the specific song (i_love_you.mp3) is played
-  if (songUrl === "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3" || listenedSongs.size === totalSongs) {
-    console.log("All songs listened or specific song played. Showing letter screen.");
-    if (mainBackgroundMusic) {
-      mainBackgroundMusic.pause();
-      mainBackgroundMusic.currentTime = 0;
-    }
-    showLetterScreen();
+  // Nếu là bài i_love_you.mp3 thì luôn tắt nhạc nền trước khi phát
+  if (songUrl === "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3" && mainBackgroundMusic) {
+    mainBackgroundMusic.pause();
+    mainBackgroundMusic.currentTime = 0;
   }
+  showScreensaver(songUrl, customMessage);
+  // KHÔNG chuyển sang envelope ngay khi click vào i_love_you
+  // Việc chuyển sang envelope sẽ được xử lý ở onended của audio trong showScreensaver
 }
 
 // NEW: Function to show the letter screen (moved to global scope)
 function showLetterScreen() {
   letterScreen.style.display = 'flex';
   toggleSnowfall(true); // Start snowfall on letter screen
+  // Nếu audio chính (myAudio) vẫn đang phát thì dừng lại trước khi phát nhạc thư
+  if (audio && !audio.paused) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
   if (letterScreenMusic) {
     letterScreenMusic.currentTime = 0;
     letterScreenMusic.play().catch(error => {
