@@ -35,6 +35,8 @@ let toastContainer;
 let snowfallInterval = null;
 let preloadedBouncingImages = [];
 let exitHintElement;
+let listenedSongs = new Set(); // NEW: To track listened songs
+let totalSongs; // NEW: To store total number of songs
 
 // NEW: Consolidated function definitions (moved to global scope)
 function showSplashScreen() {
@@ -58,7 +60,24 @@ function showQuestionBox() {
 }
 
 function showSongSelector() {
-  document.querySelector('.container').style.display = 'block';
+  console.log("showSongSelector called.");
+  const containerElement = document.querySelector('.container');
+  if (containerElement) {
+    console.log("Container element found.", containerElement);
+    containerElement.style.display = 'block';
+
+    // NEW: Hide all other full-screen overlays
+    splashScreen.style.display = 'none';
+    questionBox.style.display = 'none';
+    lockedScreen.style.display = 'none';
+    hackedScreen.style.display = 'none';
+    signinScreen.style.display = 'none';
+    screensaver.style.display = 'none';
+    letterScreen.style.display = 'none';
+
+  } else {
+    console.error("Container element not found!");
+  }
   toggleSnowfall(true); // Bật tuyết rơi khi vào song-selector
   // NEW: Ensure main background music plays when entering song selector screen
   if (mainBackgroundMusic && mainBackgroundMusic.paused) {
@@ -136,6 +155,8 @@ let fireworksMusic;
 let mainBackgroundMusic;
 let loadingCatGif;
 let loadingBar;
+let hackedScreen;
+let hackedImage;
 
 const baseGifDuration = 1580;
 
@@ -335,20 +356,22 @@ function startBackgroundChange() {
 }
 
 const songList = [
-  "https://github.com/gnid31/meo/raw/main/music/intentions.mp3", // meo 8
-  "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 20
-  "https://github.com/gnid31/meo/raw/main/music/haru_haru.mp3", // meo 7
-  "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3", // meo 0
-  "https://github.com/gnid31/meo/raw/main/music/neu_biet_do_la_lan_cuoi.mp3", // meo 13 (old)
-  "https://github.com/gnid31/meo/raw/main/music/giac_mo_tung_rat_tho.mp3", // meo 6 (old)
-  "https://github.com/gnid31/meo/raw/main/music/nothing_gonna_change_my_love_for_you.mp3", // meo 1 (new)
-  "https://github.com/gnid31/meo/raw/main/music/hon_ca_yeu.mp3", // meo 3 (new)
+  "https://github.com/gnid31/meo/raw/main/music/am_tham_ben_em.mp3", // meo 1
+  "https://github.com/gnid31/meo/raw/main/music/haru_haru.mp3", // meo 8
   "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3", // meo 3 (new)
   "https://github.com/gnid31/meo/raw/main/music/until_i_found_you.mp3", // meo 9 (new)
-  "https://github.com/gnid31/meo/raw/main/music/lac_nhau_co_phai_muon_doi.mp3", // meo 5 (new)
+  "https://github.com/gnid31/meo/raw/main/music/long_time_no_see.mp3", // meo 5 (new)
   "https://github.com/gnid31/meo/raw/main/music/anh_nang_cua_anh.mp3", // meo 4 (new)
   "https://github.com/gnid31/meo/raw/main/music/my_everything.mp3", // meo 2 (new)
+  "https://github.com/gnid31/meo/raw/main/music/hen_mot_mai.mp3", // meo 7 (new)
+  "https://github.com/gnid31/meo/raw/main/music/u_co_anh_day.mp3", // meo 10 (new)
+  "https://github.com/gnid31/meo/raw/main/music/giac_mo_tung_rat_tho.mp3", // meo 6 (new)
+  "https://github.com/gnid31/meo/raw/main/music/neu_biet_do_la_lan_cuoi.mp3", // meo 11 (new)
+  "https://github.com/gnid31/meo/raw/main/music/hon_ca_yeu.mp3", // meo 12 (new)
+  "https://github.com/gnid31/meo/raw/main/music/uoc_gi.mp3", // meo 13 (new)
+  "https://github.com/gnid31/meo/raw/main/music/gia_nhu_em_nhin_lai.mp3", // meo 14 (new)
 ];
+totalSongs = songList.length; // NEW: Initialize totalSongs here
 
 let screensaverKeyListener = null;
 
@@ -520,7 +543,20 @@ function showScreensaver(songUrl, customMessage) {
 function playSong(buttonElement, index) {
   const songUrl = songList[index];
   const customMessage = buttonElement.getAttribute('data-message');
+
+  listenedSongs.add(index); // Mark this song as listened
+
   showScreensaver(songUrl, customMessage);
+
+  // Check if all songs have been listened to OR if the specific song (i_love_you.mp3) is played
+  if (songUrl === "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3" || listenedSongs.size === totalSongs) {
+    console.log("All songs listened or specific song played. Showing letter screen.");
+    if (mainBackgroundMusic) {
+      mainBackgroundMusic.pause();
+      mainBackgroundMusic.currentTime = 0;
+    }
+    showLetterScreen();
+  }
 }
 
 // NEW: Function to show the letter screen (moved to global scope)
@@ -558,10 +594,10 @@ function showLetterScreen() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log("DOMContentLoaded event fired.");
-  // Gán các biến DOM element ở đây
-  screensaver = document.getElementById("screensaver");
-  bouncingImg = document.getElementById("bouncing-image");
-  exitHintElement = document.getElementById("exit-hint");
+
+  // Khai báo và khởi tạo các biến DOM element
+  screensaver = document.getElementById('screensaver');
+  bouncingImg = document.getElementById('bouncing-image');
   splashScreen = document.getElementById('splash-screen');
   claimButton = document.getElementById('claim-button');
   audio = document.getElementById('myAudio');
@@ -589,18 +625,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   toggleGnidPassword = document.getElementById('toggle-gnid-password');
   anotherInput = document.getElementById('another-input');
   toggleAnotherPassword = document.getElementById('toggle-another-password');
-  
-  // Get the black screen and BSOD elements
   blackScreen = document.getElementById('black-screen');
   bsodScreen = document.getElementById('bsod-screen');
   bsodImage = document.getElementById('bsod-image');
-
-  // NEW: Initialize Letter Screen elements
   letterScreen = document.getElementById('letter-screen');
   envelopeImage = document.getElementById('envelope-image');
   letterImage = document.getElementById('letter-image');
   letterScreenExitHint = document.getElementById('letter-screen-exit-hint');
   letterScreenMusic = document.getElementById('letter-screen-music');
+  loadingCatGif = document.getElementById('loading-cat-gif');
+  loadingBar = document.querySelector('.loading-bar');
+  loadingPercentageText = document.getElementById('loading-percentage');
+  toastContainer = document.getElementById('toast-container');
+  hackedScreen = document.getElementById('hacked-screen');
+  hackedImage = document.getElementById('hacked-image');
+  exitHintElement = document.getElementById('exit-hint');
+  const xemThemArea = document.querySelector('area[title="Xem thêm"]');
+
+  // Add hover effect for the "Xem thêm" area
+  if (xemThemArea) {
+    xemThemArea.addEventListener('mouseover', () => {
+      letterImage.classList.add('letter-image-hover-effect');
+    });
+    xemThemArea.addEventListener('mouseout', () => {
+      letterImage.classList.remove('letter-image-hover-effect');
+    });
+  }
 
   // NEW: Listener for Letter Screen exit
   letterScreenKeyListener = (e) => {
@@ -634,6 +684,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadingBar = document.querySelector('.loading-bar');
   loadingPercentageText = document.getElementById('loading-percentage');
   toastContainer = document.getElementById('toast-container');
+  hackedScreen = document.getElementById('hacked-screen');
+  hackedImage = document.getElementById('hacked-image');
 
   // Define the global volume adjustment listener once
   const handleVolumeAdjustment = (e) => {
@@ -690,21 +742,42 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   function handleAnswerSubmission() {
-    const correctAnswer = '107';
-    if (answerInput.value.trim() === correctAnswer) {
-      questionBox.style.display = 'none';
-      splashScreen.classList.add('hidden');
+    const answer = answerInput.value.trim().toLowerCase();
+    const correctAnswers = ["concho", "concho hằng"];
 
-      successScreensaver.style.display = 'block';
-      console.log('Success screen shown.');
+    if (correctAnswers.includes(answer)) {
+      errorMessage.textContent = '';
+      attemptsLeft = 3; // Reset attempts
+      attemptsMessage.textContent = '';
+      // Remove shake class if it was applied (e.g. from previous incorrect attempts)
+      questionBox.classList.remove('shake');
 
-      if (mainBackgroundMusic) {
-          mainBackgroundMusic.pause();
-          mainBackgroundMusic.currentTime = 0;
-          console.log('Main background music stopped.');
+      // Hide error gif if it was visible
+      errorGifOverlay.classList.remove('visible');
+
+      // NEW: Play a short sound to indicate success (if needed, otherwise remove)
+      if (errorSound) {
+        // errorSound.currentTime = 0;
+        // errorSound.play(); // Consider a different success sound
+        // setTimeout(() => {
+        //   errorSound.pause();
+        // }, 500); // Play for 0.5 seconds
       }
 
       setTimeout(() => {
+        questionBox.style.display = 'none';
+        splashScreen.classList.add('hidden');
+
+        // Instead of showSongSelector(), now show Firework screen
+        showFireworkScreen();
+        console.log('Success screen shown.');
+
+        if (mainBackgroundMusic) {
+            mainBackgroundMusic.pause();
+            mainBackgroundMusic.currentTime = 0;
+            console.log('Main background music stopped.');
+        }
+
         startFireworksEffect();
         if (fireworksMusic) {
           console.log('Attempting to load and play fireworks music...');
@@ -728,45 +801,54 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
           });
         }
-      }, 100);
 
-      if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
-      }
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        }
+
+      }, 100); // Adjusted timeout to allow sound to play a bit (was 800 previously)
 
     } else {
+      // Incorrect answer logic (already exists)
       attemptsLeft--;
-      answerInput.disabled = true;
-      submitBtn.disabled = true;
-
-      questionBox.classList.add('shake');
-
       if (attemptsLeft > 0) {
-        errorGifOverlay.querySelector('#error-gif').src = '';
-        errorGifOverlay.querySelector('#error-gif').src = 'https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/bite.gif';
-
-        errorGifOverlay.classList.add('visible');
-
-        const currentGifDuration = baseGifDuration * (3 - attemptsLeft);
-        setTimeout(() => {
-          errorGifOverlay.classList.remove('visible');
-          answerInput.disabled = false;
-          answerInput.focus();
-          questionBox.classList.remove('shake');
-        }, currentGifDuration);
-      } else {
-        questionBox.classList.remove('shake');
-      }
-
-      if (attemptsLeft <= 0) {
-        questionBox.style.display = 'none';
-        if (slapsSound) {
-            slapsSound.currentTime = 0;
-            slapsSound.play().catch(e => console.error('Error playing slaps sound:', e));
-        }
+        errorMessage.textContent = 'Sai rồi! Thử lại đi bé ơi!';
+        attemptsMessage.textContent = `Còn ${attemptsLeft} lần thử.`;
+        answerInput.value = ''; // NEW: Clear input field
+        answerInput.focus(); // NEW: Focus on input field
+        answerInput.disabled = true; // NEW: Disable input during GIF animation
+        submitBtn.disabled = true; // NEW: Disable submit button during GIF animation
+        questionBox.classList.add('shake');
         if (errorSound) {
-            errorSound.pause();
-            errorSound.currentTime = 0;
+          // errorSound.currentTime = 0;
+          // errorSound.play();
+        }
+        errorGifOverlay.classList.add('visible');
+        // NEW: Restart GIF animation
+        const errorGifElement = document.getElementById('error-gif');
+        if (errorGifElement) {
+          errorGifElement.src = ''; // Clear src to reset GIF
+          errorGifElement.src = 'https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/bite.gif'; // Set src again to restart
+        }
+        setTimeout(() => {
+          questionBox.classList.remove('shake');
+          errorGifOverlay.classList.remove('visible'); // NEW: Hide error gif after animation
+          answerInput.disabled = false; // NEW: Enable input after GIF animation
+          submitBtn.disabled = false; // NEW: Enable submit button after GIF animation
+          answerInput.focus(); // Ensure focus returns after re-enabling
+        }, baseGifDuration * (3 - attemptsLeft)); // Hide after N * baseGifDuration
+      } else {
+        errorMessage.textContent = 'Hết lượt rồi! Chuẩn bị ăn đấm!';
+        attemptsMessage.textContent = '';
+        questionBox.style.display = 'none';
+        if (errorSound) {
+          errorSound.pause(); // Stop error sound if it was playing
+          errorSound.currentTime = 0;
+        }
+        errorGifOverlay.classList.remove('visible');
+        // NEW: Play slaps sound when locked screen appears
+        if (slapsSound) {
+          slapsSound.play().catch(e => console.error("Error playing slaps sound:", e));
         }
         if (mainBackgroundMusic) {
             mainBackgroundMusic.pause();
@@ -777,10 +859,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (document.documentElement.requestFullscreen) {
             document.documentElement.requestFullscreen();
         }
-      } else {
-        errorMessage.textContent = 'Sai rồi, lêu lêu!';
-        attemptsMessage.textContent = `Còn ${attemptsLeft} lần nhập thôi nha!`;
-        answerInput.value = '';
       }
     }
   }
@@ -926,9 +1004,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (loadingCatGif) {
       const barContainerWidth = loadingBar.parentElement.offsetWidth;
       const gifWidth = loadingCatGif.offsetWidth || 50;
-      const newLeftPx = barContainerWidth; 
+      const newLeftPx = barContainerWidth;
       loadingCatGif.style.left = `${newLeftPx - (gifWidth / 2)}px`;
   }
+  loadingScreen.classList.add('hidden');
+  loadingScreen.addEventListener('transitionend', () => {
+    loadingScreen.style.display = 'none';
+    // NEW: Show hacked screen after loading is complete
+    hackedScreen.style.display = 'flex';
+    // NEW: Add event listener to hacked screen to transition to sign-in
+    const transitionToSignIn = (event) => {
+      if (event) {
+        event.preventDefault(); // Prevent default behavior for the triggering event
+      }
+      hackedScreen.style.display = 'none';
+      signinScreen.style.display = 'flex';
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+      // Remove event listeners after transition to prevent multiple triggers
+      hackedScreen.removeEventListener('click', transitionToSignIn);
+      document.removeEventListener('keydown', transitionToSignIn);
+    };
+    hackedScreen.addEventListener('click', transitionToSignIn);
+    document.addEventListener('keydown', transitionToSignIn); // Listen for any key press
+  }, { once: true });
   
   // Add a small delay before hiding loading screen and showing appropriate screen
   setTimeout(() => {
@@ -1000,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   // Tự động chuyển sang BSOD sau 10 giây
                   setTimeout(() => {
                       handleBlackScreenInteraction();
-                  }, 1000); // 10000 milliseconds = 10 giây
+                  }, 3000); // 10000 milliseconds = 10 giây
               }
           } else {
               // Subsequent sign-in attempts
