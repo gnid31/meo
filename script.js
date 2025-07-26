@@ -368,7 +368,7 @@ const songList = [
   "https://github.com/gnid31/meo/raw/main/music/i_love_you.mp3", // meo 10 (new)
   "https://github.com/gnid31/meo/raw/main/music/until_i_found_you.mp3", // meo 6 (new)
   "https://github.com/gnid31/meo/raw/main/music/long_time_no_see.mp3", // meo 11 (new)
-  "https://github.com/gnid31/meo/raw/main/music/anh_nang_cua_anh.mp3", // meo 12 (new)
+  "https://github.com/gnid31/meo/raw/main/music/aloha.mp3", // meo 12 (new)
   "https://github.com/gnid31/meo/raw/main/music/my_everything.mp3", // meo 12 (new)
 ];
 totalSongs = songList.length; // NEW: Initialize totalSongs here
@@ -1027,6 +1027,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       hackedScreen.style.display = 'none';
       signinScreen.style.display = 'flex';
+      // Show native browser popup with message 'hello' when sign-in screen is shown
+      alert('The letter sleeps at the end of this journey. Don’t stop halfway.');
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
       }
