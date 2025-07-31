@@ -1180,20 +1180,28 @@ document.addEventListener('DOMContentLoaded', async () => {
               return;
           }
 
+          // Hiện icon khi có ký tự, ẩn khi rỗng
           const checkInputForIconVisibility = () => {
               if (inputElement.value.length > 0) {
                   toggleIcon.classList.add('visible');
               } else {
                   toggleIcon.classList.remove('visible');
+                  // Đảm bảo icon luôn về trạng thái fa-eye khi ẩn
+                  toggleIcon.classList.remove('fa-eye-slash');
+                  toggleIcon.classList.add('fa-eye');
+                  inputElement.setAttribute('type', 'password');
               }
           };
-
           inputElement.addEventListener('input', checkInputForIconVisibility);
-          checkInputForIconVisibility(); 
+          checkInputForIconVisibility();
+
+          // Đảm bảo trạng thái ban đầu là fa-eye
+          toggleIcon.classList.remove('fa-eye-slash');
+          toggleIcon.classList.add('fa-eye');
 
           toggleIcon.addEventListener('click', () => {
-              const type = inputElement.getAttribute('type') === 'password' ? 'text' : 'password';
-              inputElement.setAttribute('type', type);
+              const isPassword = inputElement.getAttribute('type') === 'password';
+              inputElement.setAttribute('type', isPassword ? 'text' : 'password');
               toggleIcon.classList.toggle('fa-eye');
               toggleIcon.classList.toggle('fa-eye-slash');
           });
