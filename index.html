@@ -86,10 +86,14 @@
   <audio id="fireworks-music" src="https://github.com/gnid31/meo/raw/main/music/happy_birthday.mp3" loop></audio>
 
   <!-- New audio for main background music -->
+  <audio id="typing-sound" src="https://github.com/gnid31/meo/raw/main/music/typing.mp3" preload="auto"></audio>
   <audio id="main-background-music" src="https://github.com/gnid31/meo/raw/main/music/background_music3.mp3" loop></audio>
 
   <!-- NEW audio for slaps sound -->
   <audio id="slaps-sound" src="https://github.com/gnid31/meo/raw/main/music/slaps2.mp3" loop></audio>
+
+  <!-- NEW audio for typing sound effect -->
+  <audio id="typing-sound" src="https://tuna.voicemod.net/sound/6d4dfb84-7df3-4b58-8e0d-9d0540e1e85c"></audio>
 
   <!-- New success screensaver HTML -->
   <div id="success-screensaver">
@@ -144,7 +148,8 @@
 
   <!-- NEW: HACKED SCREEN -->
   <div id="hacked-screen" style="display: none;">
-    <img id="hacked-image" src="https://raw.githubusercontent.com/gnid31/meo/refs/heads/main/gif/hacked.png" alt="Hacked" />
+    <div id="hacked-typing-message"></div>
+    <div class="hacked-typing-message text-red press-enter-line blink-hard">Press Enter to continue</div>
   </div>
 
   <!-- NEW: Toast Notification Container -->

@@ -37,6 +37,68 @@ let preloadedBouncingImages = [];
 let exitHintElement;
 let listenedSongs = new Set(); // NEW: To track listened songs
 let totalSongs; // NEW: To store total number of songs
+let typingSound; // NEW: Declare typing sound audio element
+
+// Typing effect for hacked message (now global)
+function startHackedTypingEffect() {
+  const hackedTypingMessage = document.getElementById('hacked-typing-message');
+  // Set the message instantly, let CSS handle the animation
+  hackedTypingMessage.innerHTML = `
+    <span class="typewriter-message with-caret">The letter sleeps at the end of this journey. Don\'t stop halfway</span><br>
+    <span class="press-enter-line">Press Enter to continue</span>
+  `;
+  let hackedScreenCanExit = false;
+
+  if (typingSound) {
+    typingSound.currentTime = 0;
+    typingSound.loop = true; // Loop the typing sound
+    typingSound.play().catch(e => console.error("Error playing typing sound:", e));
+  }
+
+  // Sau khi typing xong, chỉ hiện dòng dưới với hiệu ứng nhấp nháy, không caret
+  setTimeout(() => {
+    const showPressEnterLine = () => {
+      const firstLine = hackedTypingMessage.querySelector('.typewriter-message');
+      const secondLine = hackedTypingMessage.querySelector('.press-enter-line');
+      // Giữ caret ở cuối dòng typing
+      if (firstLine) firstLine.classList.add('with-caret');
+      // Hiện dòng dưới với hiệu ứng nhấp nháy toàn dòng
+      if (secondLine) {
+        secondLine.classList.add('fade-in'); // Thêm lớp fade-in để hiện dòng
+        secondLine.classList.add('blink-hard'); // Đảm bảo hiệu ứng nhấp nháy
+
+        if (typingSound) {
+          typingSound.pause(); // Stop typing sound when animation finishes
+          typingSound.currentTime = 0;
+        }
+
+        setTimeout(() => { hackedScreenCanExit = true; }, 1800); // fade-in duration
+      } else {
+        setTimeout(showPressEnterLine, 100);
+      }
+    };
+    showPressEnterLine();
+  }, 6200); // typewriter duration
+  const transitionToSignIn = (event) => {
+    if (!hackedScreenCanExit) return;
+    if (!event || event.type !== 'keydown' || event.key !== 'Enter') return;
+    event.preventDefault();
+    hackedScreen.style.display = 'none';
+    signinScreen.style.display = 'flex';
+    toggleSnowfall(true); // Bật tuyết rơi khi vào màn hình đăng nhập
+    if (mainBackgroundMusic && mainBackgroundMusic.paused) {
+      mainBackgroundMusic.play().catch(error => {
+        console.error('Error playing main background music on sign-in screen (from hacked screen):', error);
+      });
+    }
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
+    document.removeEventListener('keydown', transitionToSignIn);
+  };
+  document.removeEventListener('keydown', transitionToSignIn);
+  document.addEventListener('keydown', transitionToSignIn);
+}
 
 // NEW: Consolidated function definitions (moved to global scope)
 function showSplashScreen() {
@@ -648,6 +710,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   hackedScreen = document.getElementById('hacked-screen');
   hackedImage = document.getElementById('hacked-image');
   exitHintElement = document.getElementById('exit-hint');
+  typingSound = document.getElementById('typing-sound'); // NEW: Initialize typing sound
   const xemThemArea = document.querySelector('area[title="Xem thêm"]');
 
   // Add hover effect for the "Xem thêm" area
@@ -1020,24 +1083,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadingScreen.style.display = 'none';
     // NEW: Show hacked screen after loading is complete
     hackedScreen.style.display = 'flex';
-    // NEW: Add event listener to hacked screen to transition to sign-in
-    const transitionToSignIn = (event) => {
-      if (event) {
-        event.preventDefault(); // Prevent default behavior for the triggering event
-      }
-      hackedScreen.style.display = 'none';
-      signinScreen.style.display = 'flex';
-      // Show native browser popup with message 'hello' when sign-in screen is shown
-      alert('The letter sleeps at the end of this journey. Don’t stop halfway.');
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      }
-      // Remove event listeners after transition to prevent multiple triggers
-      hackedScreen.removeEventListener('click', transitionToSignIn);
-      document.removeEventListener('keydown', transitionToSignIn);
-    };
-    hackedScreen.addEventListener('click', transitionToSignIn);
-    document.addEventListener('keydown', transitionToSignIn); // Listen for any key press
+    startHackedTypingEffect(); // Start the typing effect
+    toggleSnowfall(true); // Bắt đầu tuyết rơi trên màn hình hacked
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
   }, { once: true });
   
   // Add a small delay before hiding loading screen and showing appropriate screen
@@ -1046,17 +1096,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadingScreen.classList.add('hidden');
     }
     
-    // Show sign-in screen immediately after loading is done
-    if (signinScreen) {
-        signinScreen.style.display = 'flex';
-        usernameInput.focus(); // Focus on username input
-        toggleSnowfall(true); // Bắt đầu tuyết rơi trên màn hình đăng nhập
+    // NEW: Show hacked screen immediately after loading is done
+    if (hackedScreen) {
+        hackedScreen.style.display = 'flex';
+        startHackedTypingEffect(); // Start the typing effect
+        toggleSnowfall(true); // Bắt đầu tuyết rơi trên màn hình hacked
         if (document.documentElement.requestFullscreen) {
           document.documentElement.requestFullscreen();
         }
     }
     
-    // Ensure blackScreen, bsodScreen and splashScreen are hidden initially
+    // Ensure other screens are hidden initially
+    if (signinScreen) { signinScreen.style.display = 'none'; }
     if (blackScreen) { blackScreen.style.display = 'none'; }
     if (bsodScreen) { bsodScreen.style.display = 'none'; }
     if (splashScreen) { splashScreen.style.display = 'none'; } // Ensure splashScreen is hidden
@@ -1111,6 +1162,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                   setTimeout(() => {
                       handleBlackScreenInteraction();
                   }, 3000); // 10000 milliseconds = 10 giây
+                  if (mainBackgroundMusic) {
+                      mainBackgroundMusic.pause();
+                      mainBackgroundMusic.currentTime = 0;
+                      console.log('Main background music paused when black screen is displayed.');
+                  }
               }
           } else {
               // Subsequent sign-in attempts
@@ -1237,7 +1293,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                   toggleSnowfall(true); // Bật tuyết rơi khi quay lại màn hình đăng nhập
 
                   // Play main background music when sign-in screen is shown (only once)
-                  if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
+                  if (mainBackgroundMusic && !mainBackgroundMusic.paused) {
+                      mainBackgroundMusic.currentTime = 0; // Đảm bảo nhạc bắt đầu từ đầu
+                  }
+                  if (mainBackgroundMusic && mainMusicStartedOnSignInScreen === false) {
                       mainBackgroundMusic.play().then(() => {
                           console.log('Main background music started playing successfully on sign-in screen after BSOD exit.');
                           mainMusicStartedOnSignInScreen = true;
@@ -1324,7 +1383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     track.classList.add('carousel-track-animate');
   })();
 
-  // ...existing code...
+  // ...rest of the code...
 
   async function preloadBouncingImages(progressCallback) {
     console.log("Preloading bouncing images...");
@@ -1460,7 +1519,11 @@ function handleBlackScreenInteraction() {
     console.log('Tương tác trên màn hình đen, chuyển sang BSOD.');
     blackScreen.style.display = 'none'; // Ẩn màn hình đen
     bsodScreen.style.display = 'flex'; // Hiển thị màn hình BSOD
-    // Đảm bảo không có nhạc phát ở đây
+    if (mainBackgroundMusic) {
+      mainBackgroundMusic.pause();
+      mainBackgroundMusic.currentTime = 0;
+      console.log('Main background music paused when BSOD screen is displayed.');
+    }
     // Khi vào BSOD, không bật/tắt tuyết rơi ở đây
 }
 
@@ -1497,60 +1560,48 @@ function handleBSODInteraction() {
         signinScreen.classList.remove('hidden');
         splashScreen.style.display = 'none';
         splashScreen.classList.add('hidden');
-        questionBox.style.display = 'none';
-        console.log('Sau BSOD: Đăng nhập sai, quay lại màn hình đăng nhập.');
-        toggleSnowfall(true);
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
+        toggleSnowfall(true); // Bật tuyết rơi khi quay lại màn hình đăng nhập
+        if (mainBackgroundMusic && !mainBackgroundMusic.paused) {
+          mainBackgroundMusic.currentTime = 0; // Đảm bảo nhạc bắt đầu từ đầu
         }
-        if (mainBackgroundMusic && !mainMusicStartedOnSignInScreen) {
+        if (mainBackgroundMusic && mainMusicStartedOnSignInScreen === false) {
             mainBackgroundMusic.play().then(() => {
+                console.log('Main background music started playing successfully on sign-in screen after BSOD exit (from handleBSODInteraction).');
                 mainMusicStartedOnSignInScreen = true;
-                console.log('Nhạc nền chính đã phát sau BSOD và quay lại màn đăng nhập.');
             }).catch(error => {
-                console.error('Lỗi khi phát nhạc nền chính sau BSOD và quay lại màn đăng nhập:', error);
+                console.error('Error playing main background music on sign-in screen after BSOD exit (from handleBSODInteraction):', error);
             });
         }
     }
 }
 
-// Helper function to show a toast notification
+// NEW: showToast function for notifications
 function showToast(message, duration = 3000) {
-    // NEW: Xóa tất cả các toast cũ trước khi thêm toast mới
-    while (toastContainer.firstChild) {
-        toastContainer.removeChild(toastContainer.firstChild);
-    }
+  if (!toastContainer) {
+    console.error('Toast container not found.');
+    return;
+  }
 
-    const toast = document.createElement('div');
-    toast.classList.add('toast');
-    toast.textContent = message;
+  // Remove any existing toasts of the same type before adding a new one
+  const existingToasts = toastContainer.querySelectorAll('.toast');
+  existingToasts.forEach(t => t.remove());
 
-    toastContainer.appendChild(toast);
+  const toast = document.createElement('div');
+  toast.classList.add('toast');
+  toast.textContent = message;
+  toastContainer.appendChild(toast);
 
-    // Force reflow to ensure animation plays
-    void toast.offsetWidth;
+  // Force reflow to enable transition
+  void toast.offsetWidth;
 
-    toast.classList.add('show');
+  toast.classList.add('show');
 
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-
-        // Remove the toast element after its hide animation completes
-        // Use a fallback setTimeout in case transitionend doesn't fire reliably
-        const transitionDurationMs = 500; // 0.5s from CSS transition
-        const buffer = 50; // Small buffer for safety
-
-        const removeToastHandler = () => {
-            if (toast.parentNode) { // Check if it hasn't been removed already
-                toast.remove();
-            }
-        };
-
-        toast.addEventListener('transitionend', removeToastHandler, { once: true });
-
-        // Fallback: remove after transition duration + buffer
-        setTimeout(removeToastHandler, transitionDurationMs + buffer);
-
-    }, duration);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+    // Remove the toast from the DOM after the hide transition completes
+    toast.addEventListener('transitionend', () => {
+      toast.remove();
+    }, { once: true });
+  }, duration);
 }
