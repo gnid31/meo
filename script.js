@@ -143,7 +143,11 @@ function showSongSelector() {
   toggleSnowfall(true); // Bật tuyết rơi khi vào song-selector
   // NEW: Ensure main background music plays when entering song selector screen
   // Sửa: Chỉ phát nhạc nền nếu không có bài hát nào đang phát (audio.paused)
-  if (mainBackgroundMusic && mainBackgroundMusic.paused && (!audio || audio.paused)) {
+  // Luôn phát lại nhạc nền khi quay về màn hình chọn bài, trừ khi đang phát bài hát khác
+  // Luôn phát lại nhạc nền khi vào màn hình chọn bài
+  if (mainBackgroundMusic) {
+      mainBackgroundMusic.pause();
+      mainBackgroundMusic.currentTime = 0;
       mainBackgroundMusic.play().catch(error => {
           console.error('Error playing main background music when showing song selector:', error);
       });
@@ -481,8 +485,13 @@ function showScreensaver(songUrl, customMessage) {
                 bouncingImg.src = '';
             }
 
+            // Phát lại nhạc nền ngay khi thoát screensaver
             if (mainBackgroundMusic) {
-                mainBackgroundMusic.pause(); // Pause main music to play letter screen music
+                mainBackgroundMusic.pause();
+                mainBackgroundMusic.currentTime = 0;
+                mainBackgroundMusic.play().catch(error => {
+                    console.error('Error playing main background music after individual song:', error);
+                });
             }
             if (screensaverKeyListener) {
                 window.removeEventListener('keydown', screensaverKeyListener);
@@ -814,7 +823,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function handleAnswerSubmission() {
     const answer = answerInput.value.trim().toLowerCase();
-    const correctAnswers = ["concho", "concho hằng"];
+    const correctAnswers = ["mĩ nữ"];
 
     if (correctAnswers.includes(answer)) {
       errorMessage.textContent = '';
